@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-ink: #0a0a0a;
+  --color-paper: #fafaf7;
+  --color-accent: #ff4d2e;
+  --color-gold: #f5c518;
+  --color-muted: #6b6b6b;
+  --color-line: #e5e5e0;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-paper);
+}
+
+.sb-stamp {
+  display: inline-block;
+  transform: rotate(-4deg);
+  padding: 0.15em 0.55em;
+  background: var(--color-accent);
+  color: var(--color-paper);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 var(--color-ink);
+}
+
+.sb-card {
+  background: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  box-shadow: 6px 6px 0 var(--color-ink);
+  border-radius: 14px;
+}
+
+.sb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: 4px 4px 0 var(--color-accent);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  cursor: pointer;
+}
+
+.sb-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--color-accent);
+}
+
+.sb-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--color-accent);
+}
+
+.sb-btn-ghost {
+  background: transparent;
+  color: var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+
+.sb-btn-ghost:hover {
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+
+.grain {
+  background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(0, 0, 0, 0.06) 1px,
+      transparent 0
+    );
+  background-size: 18px 18px;
+}
+
+@keyframes wobble {
+  0%, 100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+.wobble {
+  animation: wobble 2.6s ease-in-out infinite;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slide-up 380ms ease-out both;
+}
