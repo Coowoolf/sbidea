@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { unicorns } from "@/lib/unicorns";
 import { productUrl } from "@/lib/urls";
+import { SB_MARQUEE_ITEMS } from "@/lib/sb-meanings";
+import { SbRotatingText } from "@/components/sb-rotating-text";
 
 export const metadata: Metadata = {
   title: "SB Idea · 看起来 SB，赚起来真",
@@ -106,9 +108,10 @@ export default function HomePage() {
             往往是最赚钱的那一个。
           </h1>
           <p className="max-w-2xl text-lg text-[color:var(--color-muted)] md:text-xl">
-            10 个小工具，一晚上把你所有『我是不是疯了』的瞬间变成可能的独角兽。
-            每一个都能一键生成分享卡，发朋友圈、发 X、发小红书，都自带流量。
+            创业者的灵感实验室。10 个 AI 小工具帮你生成、吐槽、鉴定、占卜那些
+            听起来 SB 但可能封神的创业点子。
           </p>
+          <SbRotatingText />
           <div className="mt-2 flex flex-wrap gap-3">
             <a href={productUrl("generator")} className="sb-btn">
               🎲 给我一个 SB 点子
@@ -123,7 +126,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mt-8">
+      {/* SB Meanings Marquee */}
+      <section className="mt-8 -mx-5 overflow-hidden border-y-2 border-[color:var(--color-ink)] bg-[color:var(--color-ink)] py-3">
+        <div className="marquee-track">
+          {[...SB_MARQUEE_ITEMS, ...SB_MARQUEE_ITEMS].map((item, i) => (
+            <span
+              key={i}
+              className="mx-6 whitespace-nowrap text-sm font-semibold text-[color:var(--color-paper)] opacity-90"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-12">
         <div className="mb-4 flex items-end justify-between">
           <h2 className="text-2xl font-black md:text-3xl">10 个小工具</h2>
           <div className="text-sm text-[color:var(--color-muted)]">
