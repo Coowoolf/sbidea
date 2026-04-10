@@ -126,13 +126,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SB Meanings Marquee */}
-      <section className="mt-8 -mx-5 overflow-hidden border-y-2 border-[color:var(--color-ink)] bg-[color:var(--color-ink)] py-3">
+      {/* SB Meanings Marquee — dual row, opposite directions */}
+      <section className="mt-8 -mx-5 overflow-hidden border-y-2 border-[color:var(--color-ink)] bg-[color:var(--color-ink)] py-4">
         <div className="marquee-track">
           {[...SB_MARQUEE_ITEMS, ...SB_MARQUEE_ITEMS].map((item, i) => (
             <span
-              key={i}
-              className="mx-6 whitespace-nowrap text-sm font-semibold text-[color:var(--color-paper)] opacity-90"
+              key={`a${i}`}
+              className="mx-8 whitespace-nowrap text-base font-bold text-[color:var(--color-paper)] md:text-lg"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+        <div className="marquee-track-reverse mt-3">
+          {[...SB_MARQUEE_ITEMS, ...SB_MARQUEE_ITEMS].reverse().map((item, i) => (
+            <span
+              key={`b${i}`}
+              className="mx-8 whitespace-nowrap text-base font-bold text-[color:var(--color-paper)] opacity-50 md:text-lg"
             >
               {item}
             </span>
