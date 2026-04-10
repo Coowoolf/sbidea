@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GeneratedIdea } from "../api/generate/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type GenerateState =
   | { status: "idle" }
@@ -12,6 +15,22 @@ type GenerateState =
 export function GeneratorClient() {
   const [hint, setHint] = useState("");
   const [state, setState] = useState<GenerateState>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("generator", state.idea.name, {
+        name: state.idea.name,
+        oneLiner: state.idea.oneLiner,
+        sbScore: state.idea.sbScore,
+      });
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleGenerate() {
     setState({ status: "loading" });
@@ -39,6 +58,7 @@ export function GeneratorClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <label
           htmlFor="hint"
@@ -85,6 +105,8 @@ export function GeneratorClient() {
       {state.status === "loading" && <SkeletonCard />}
 
       {state.status === "success" && <IdeaCard idea={state.idea} />}
+
+      {state.status === "success" && <AdventureCTA product="generator" />}
     </div>
   );
 }

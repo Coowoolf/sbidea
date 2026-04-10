@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DeathOracle } from "../api/deathways/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type State =
   | { status: "idle" }
@@ -12,6 +15,20 @@ type State =
 export function DeathwaysClient() {
   const [idea, setIdea] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("deathways", state.oracle.ways[0]?.title ?? "占卜完成", {
+        waysCount: state.oracle.ways.length,
+      });
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleGenerate() {
     const cleaned = idea.trim();
@@ -65,6 +82,7 @@ export function DeathwaysClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <label
           htmlFor="idea"
@@ -158,6 +176,8 @@ export function DeathwaysClient() {
               {state.oracle.finalEulogy}
             </p>
           </article>
+
+          <AdventureCTA product="deathways" />
         </>
       )}
     </div>

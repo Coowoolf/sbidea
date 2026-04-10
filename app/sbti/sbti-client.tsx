@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 import { productUrl } from "@/lib/urls";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 import {
   QUESTIONS,
   TYPES,
@@ -162,6 +165,7 @@ export function SbtiClient() {
     const progress = Math.round(((state.step + 1) / total) * 100);
     return (
       <div className="space-y-6">
+        <AdventureBar />
         {/* Progress */}
         <div className="flex items-center gap-3">
           <div className="text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
@@ -207,6 +211,7 @@ export function SbtiClient() {
   if (state.phase === "mbti") {
     return (
       <div className="space-y-6">
+        <AdventureBar />
         <div className="sb-card slide-up p-6 md:p-8">
           <div className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
             你的创业人格: {state.sbtiCode} · {state.sbtiType.name} {state.sbtiType.emoji}
@@ -347,6 +352,21 @@ function ProfileResult({
 }) {
   const pNumber = personalityNumber(sbtiCode, mbtiType);
   const bg = `linear-gradient(135deg, ${profile.gradientFrom || "#667eea"}, ${profile.gradientTo || "#764ba2"})`;
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (!stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("sbti", profile.name, {
+        code: sbtiCode,
+        mbtiType,
+        number: pNumber,
+        name: profile.name,
+        emoji: profile.emoji,
+      });
+    }
+  }, [recordStop, profile, sbtiCode, mbtiType, pNumber]);
 
   const shareText = useMemo(() => {
     const mbtiLabel =
@@ -419,6 +439,7 @@ function ProfileResult({
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       {/* Shareable card region (captured by html2canvas) */}
       <div ref={cardRef} className="space-y-6">
       {/* Hero card */}
@@ -574,6 +595,8 @@ function ProfileResult({
           🔁 重新测一次
         </button>
       </div>
+
+      <AdventureCTA product="sbti" />
     </div>
   );
 }

@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Daily } from "../api/daily/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type State =
   | { status: "idle" }
@@ -11,6 +14,18 @@ type State =
 
 export function DailyClient() {
   const [state, setState] = useState<State>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("daily", state.daily.quote, { quote: state.daily.quote });
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   // auto-fire one on mount so the page feels alive
   useEffect(() => {
@@ -63,6 +78,7 @@ export function DailyClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
@@ -90,6 +106,8 @@ export function DailyClient() {
       )}
 
       {state.status === "success" && <Poster daily={state.daily} />}
+
+      {state.status === "success" && <AdventureCTA product="daily" />}
 
       {state.status === "loading" && (
         <div className="sb-card slide-up flex h-80 items-center justify-center text-[color:var(--color-muted)]">

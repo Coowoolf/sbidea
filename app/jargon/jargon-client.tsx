@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { JargonResult } from "../api/jargon/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type Direction = "toJargon" | "toPlain";
 
@@ -15,6 +18,21 @@ export function JargonClient() {
   const [text, setText] = useState("");
   const [direction, setDirection] = useState<Direction>("toJargon");
   const [state, setState] = useState<State>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("jargon", "黑话含量 " + state.result.jargonScore, {
+        translation: state.result.translation,
+        score: state.result.jargonScore,
+      });
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleTranslate() {
     const cleaned = text.trim();
@@ -77,6 +95,7 @@ export function JargonClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <div className="mb-4 inline-flex rounded-full border-2 border-[color:var(--color-ink)] p-1">
           <DirectionButton
@@ -180,6 +199,8 @@ export function JargonClient() {
           </section>
         </article>
       )}
+
+      {state.status === "success" && <AdventureCTA product="jargon" />}
     </div>
   );
 }

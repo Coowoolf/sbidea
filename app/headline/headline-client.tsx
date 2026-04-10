@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FakeArticle } from "../api/headline/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type State =
   | { status: "idle" }
@@ -12,6 +15,21 @@ type State =
 export function HeadlineClient() {
   const [idea, setIdea] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("headline", state.article.companyName, {
+        headline: state.article.headline,
+        valuation: state.article.valuation,
+      });
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleGenerate() {
     const cleaned = idea.trim();
@@ -67,6 +85,7 @@ export function HeadlineClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <label
           htmlFor="idea"
@@ -125,6 +144,8 @@ export function HeadlineClient() {
       )}
 
       {state.status === "success" && <ArticleView article={state.article} />}
+
+      {state.status === "success" && <AdventureCTA product="headline" />}
     </div>
   );
 }

@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SloganResult } from "../api/slogan/route";
 import { STYLES } from "../api/slogan/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type State =
   | { status: "idle" }
@@ -24,6 +27,20 @@ const STYLE_COLORS: Record<string, string> = {
 export function SloganClient() {
   const [concept, setConcept] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("slogan", "8 种风格", {
+        count: state.result.slogans.length,
+      });
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleGenerate() {
     const cleaned = concept.trim();
@@ -78,6 +95,7 @@ export function SloganClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <label
           htmlFor="concept"
@@ -154,6 +172,8 @@ export function SloganClient() {
           })}
         </div>
       )}
+
+      {state.status === "success" && <AdventureCTA product="slogan" />}
     </div>
   );
 }

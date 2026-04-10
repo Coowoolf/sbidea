@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { drawThree, type TarotCard } from "@/lib/tarot";
 import type { TarotReading } from "../api/tarot/route";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type DrawnCards = {
   past: TarotCard;
@@ -19,6 +22,23 @@ type State =
 export function TarotClient() {
   const [question, setQuestion] = useState("");
   const [state, setState] = useState<State>({ status: "idle" });
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "success" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      const cards = state.cards;
+      recordStop(
+        "tarot",
+        [cards.past.name, cards.challenge.name, cards.outcome.name].join(" → "),
+        { overall: state.reading.overall },
+      );
+    }
+    if (state.status !== "success") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleDraw() {
     const cleaned = question.trim();
@@ -95,6 +115,7 @@ export function TarotClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <label
           htmlFor="question"
@@ -211,6 +232,8 @@ export function TarotClient() {
           </div>
         </article>
       )}
+
+      {state.status === "success" && <AdventureCTA product="tarot" />}
     </div>
   );
 }

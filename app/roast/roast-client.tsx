@@ -1,6 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAdventure } from "@/components/adventure-provider";
+import { AdventureBar } from "@/components/adventure-bar";
+import { AdventureCTA } from "@/components/adventure-cta";
 
 type RoastState =
   | { status: "idle" }
@@ -19,6 +22,18 @@ export function RoastClient() {
   const [idea, setIdea] = useState("");
   const [state, setState] = useState<RoastState>({ status: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  const { recordStop } = useAdventure();
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "done" && !stoppedRef.current) {
+      stoppedRef.current = true;
+      recordStop("roast", "鉴定完成", { textLength: state.text.length });
+    }
+    if (state.status !== "done") {
+      stoppedRef.current = false;
+    }
+  }, [state, recordStop]);
 
   async function handleSubmit() {
     const cleaned = idea.trim();
@@ -100,6 +115,7 @@ export function RoastClient() {
 
   return (
     <div className="space-y-6">
+      <AdventureBar />
       <div className="sb-card p-6">
         <label
           htmlFor="idea"
@@ -190,6 +206,8 @@ export function RoastClient() {
           )}
         </article>
       )}
+
+      {state.status === "done" && <AdventureCTA product="roast" />}
     </div>
   );
 }
