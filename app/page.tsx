@@ -142,7 +142,7 @@ export default function HomePage() {
           {[...SB_MARQUEE_ITEMS, ...SB_MARQUEE_ITEMS].reverse().map((item, i) => (
             <span
               key={`b${i}`}
-              className="mx-8 whitespace-nowrap text-base font-bold text-[color:var(--color-paper)] opacity-50 md:text-lg"
+              className="mx-8 whitespace-nowrap text-base font-bold text-[color:var(--color-paper)] opacity-70 md:text-lg"
             >
               {item}
             </span>

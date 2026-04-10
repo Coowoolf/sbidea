@@ -125,13 +125,13 @@ body {
 .marquee-track {
   display: flex;
   width: max-content;
-  animation: marquee-left 120s linear infinite;
+  animation: marquee-left 240s linear infinite;
 }
 
 .marquee-track-reverse {
   display: flex;
   width: max-content;
-  animation: marquee-right 100s linear infinite;
+  animation: marquee-right 200s linear infinite;
 }
 
 .marquee-track:hover,
