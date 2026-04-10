@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { unicorns } from "@/lib/unicorns";
+import { productUrl } from "@/lib/urls";
 
 export const metadata: Metadata = {
   title: "SB Idea · 看起来 SB，赚起来真",
@@ -10,17 +10,7 @@ export const metadata: Metadata = {
 };
 
 type Product = {
-  href:
-    | "/generator"
-    | "/roast"
-    | "/hall"
-    | "/sbti"
-    | "/headline"
-    | "/deathways"
-    | "/slogan"
-    | "/tarot"
-    | "/daily"
-    | "/jargon";
+  slug: string;
   emoji: string;
   title: string;
   tagline: string;
@@ -29,70 +19,70 @@ type Product = {
 
 const products: Product[] = [
   {
-    href: "/generator",
+    slug: "generator",
     emoji: "🎲",
     title: "SB 想法生成器",
     tagline: "一键吐出一个『听起来很傻、细想真行』的创业点子",
     tag: "生成",
   },
   {
-    href: "/roast",
+    slug: "roast",
     emoji: "🔥",
     title: "SB 想法鉴定所",
     tagline: "把点子扔进来，AI 先毒舌一通再给你真心话",
     tag: "鉴定",
   },
   {
-    href: "/hall",
+    slug: "hall",
     emoji: "🦄",
     title: "SB 独角兽名人堂",
     tagline: "那些发布时被骂 SB、现在估值百亿的真实案例",
     tag: "策展",
   },
   {
-    href: "/sbti",
+    slug: "sbti",
     emoji: "🧠",
     title: "SBTI · 创业 16 型",
     tagline: "12 道题测出你是哪一种 SB 创始人",
     tag: "测试",
   },
   {
-    href: "/headline",
+    slug: "headline",
     emoji: "📰",
     title: "SB 融资头条",
     tagline: "把你的点子写成一篇煞有介事的融资新闻",
     tag: "娱乐",
   },
   {
-    href: "/deathways",
+    slug: "deathways",
     emoji: "💀",
     title: "SB 死法占卜",
     tagline: "预言你的点子会以哪 7 种戏剧化方式死掉",
     tag: "鉴定",
   },
   {
-    href: "/slogan",
+    slug: "slogan",
     emoji: "🎨",
     title: "SB Slogan 对撞机",
     tagline: "同一个产品的 8 种风格 slogan 并排比拼",
     tag: "工具",
   },
   {
-    href: "/tarot",
+    slug: "tarot",
     emoji: "🔮",
     title: "SB 创业塔罗",
     tagline: "22 张大阿卡那，抽 3 张解读你的创业命运",
     tag: "测试",
   },
   {
-    href: "/daily",
+    slug: "daily",
     emoji: "🏆",
     title: "SB 成功学日签",
     tagline: "每天一句反成功学口号，自动配色海报",
     tag: "娱乐",
   },
   {
-    href: "/jargon",
+    slug: "jargon",
     emoji: "📖",
     title: "SB 黑话词典",
     tagline: "人话 ↔ 投资人黑话双向翻译",
@@ -120,15 +110,15 @@ export default function HomePage() {
             每一个都能一键生成分享卡，发朋友圈、发 X、发小红书，都自带流量。
           </p>
           <div className="mt-2 flex flex-wrap gap-3">
-            <Link href="/generator" className="sb-btn">
+            <a href={productUrl("generator")} className="sb-btn">
               🎲 给我一个 SB 点子
-            </Link>
-            <Link href="/sbti" className="sb-btn sb-btn-ghost">
+            </a>
+            <a href={productUrl("sbti")} className="sb-btn sb-btn-ghost">
               🧠 测我是哪一型
-            </Link>
-            <Link href="/tarot" className="sb-btn sb-btn-ghost">
+            </a>
+            <a href={productUrl("tarot")} className="sb-btn sb-btn-ghost">
               🔮 抽张塔罗
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -142,9 +132,9 @@ export default function HomePage() {
         </div>
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {products.map((p, i) => (
-            <Link
-              key={p.href}
-              href={p.href}
+            <a
+              key={p.slug}
+              href={productUrl(p.slug)}
               className="sb-card slide-up block p-6 transition-transform hover:-translate-y-1"
               style={{ animationDelay: `${i * 30}ms` }}
             >
@@ -161,7 +151,7 @@ export default function HomePage() {
               <div className="mt-5 text-sm font-bold underline">
                 去玩一下 →
               </div>
-            </Link>
+            </a>
           ))}
         </div>
       </section>
@@ -210,15 +200,15 @@ export default function HomePage() {
           <h2 className="text-2xl font-black md:text-3xl">
             名人堂精选 · 当年都被骂 SB
           </h2>
-          <Link href="/hall" className="text-sm font-bold underline">
+          <a href={productUrl("hall")} className="text-sm font-bold underline">
             查看全部 →
-          </Link>
+          </a>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {hallPreview.map((u) => (
-            <Link
+            <a
               key={u.slug}
-              href={`/hall/${u.slug}`}
+              href={`${productUrl("hall")}/${u.slug}`}
               className="sb-card block p-5 transition-transform hover:-translate-y-1"
             >
               <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[color:var(--color-muted)]">
@@ -229,7 +219,7 @@ export default function HomePage() {
                 &ldquo;{u.sbQuote}&rdquo;
               </p>
               <div className="mt-3 text-sm font-bold">{u.nowValuation}</div>
-            </Link>
+            </a>
           ))}
         </div>
       </section>

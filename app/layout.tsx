@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+import { productUrl, homeUrl } from "@/lib/urls";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sbidea.ai";
@@ -59,39 +59,39 @@ export default function RootLayout({
       <body className="min-h-screen grain">
         <header className="border-b-2 border-[color:var(--color-ink)] bg-[color:var(--color-paper)]">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-            <Link
-              href="/"
+            <a
+              href={homeUrl()}
               className="flex items-center gap-2 text-xl font-black tracking-tight"
             >
               <span className="sb-stamp">SB</span>
               <span>idea.ai</span>
-            </Link>
+            </a>
             <nav className="hidden items-center gap-4 text-sm font-semibold md:flex">
-              <Link href="/generator" className="hover:underline">
+              <a href={productUrl("generator")} className="hover:underline">
                 生成器
-              </Link>
-              <Link href="/sbti" className="hover:underline">
+              </a>
+              <a href={productUrl("sbti")} className="hover:underline">
                 SBTI
-              </Link>
-              <Link href="/tarot" className="hover:underline">
+              </a>
+              <a href={productUrl("tarot")} className="hover:underline">
                 塔罗
-              </Link>
-              <Link href="/hall" className="hover:underline">
+              </a>
+              <a href={productUrl("hall")} className="hover:underline">
                 名人堂
-              </Link>
-              <Link
-                href="/"
+              </a>
+              <a
+                href={homeUrl()}
                 className="rounded-full border-2 border-[color:var(--color-ink)] px-3 py-1 hover:bg-[color:var(--color-ink)] hover:text-[color:var(--color-paper)]"
               >
                 全部 10 个
-              </Link>
+              </a>
             </nav>
-            <Link
-              href="/"
+            <a
+              href={homeUrl()}
               className="rounded-full border-2 border-[color:var(--color-ink)] px-3 py-1 text-xs font-semibold md:hidden"
             >
               10 个工具
-            </Link>
+            </a>
           </div>
         </header>
         <main>{children}</main>
@@ -101,16 +101,16 @@ export default function RootLayout({
               © {new Date().getFullYear()} sbidea.ai · 看起来 SB，赚起来真
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link href="/generator" className="hover:text-[color:var(--color-ink)]">生成器</Link>
-              <Link href="/roast" className="hover:text-[color:var(--color-ink)]">鉴定所</Link>
-              <Link href="/hall" className="hover:text-[color:var(--color-ink)]">名人堂</Link>
-              <Link href="/sbti" className="hover:text-[color:var(--color-ink)]">SBTI</Link>
-              <Link href="/headline" className="hover:text-[color:var(--color-ink)]">融资头条</Link>
-              <Link href="/deathways" className="hover:text-[color:var(--color-ink)]">死法占卜</Link>
-              <Link href="/slogan" className="hover:text-[color:var(--color-ink)]">Slogan</Link>
-              <Link href="/tarot" className="hover:text-[color:var(--color-ink)]">塔罗</Link>
-              <Link href="/daily" className="hover:text-[color:var(--color-ink)]">日签</Link>
-              <Link href="/jargon" className="hover:text-[color:var(--color-ink)]">黑话词典</Link>
+              <a href={productUrl("generator")} className="hover:text-[color:var(--color-ink)]">生成器</a>
+              <a href={productUrl("roast")} className="hover:text-[color:var(--color-ink)]">鉴定所</a>
+              <a href={productUrl("hall")} className="hover:text-[color:var(--color-ink)]">名人堂</a>
+              <a href={productUrl("sbti")} className="hover:text-[color:var(--color-ink)]">SBTI</a>
+              <a href={productUrl("headline")} className="hover:text-[color:var(--color-ink)]">融资头条</a>
+              <a href={productUrl("deathways")} className="hover:text-[color:var(--color-ink)]">死法占卜</a>
+              <a href={productUrl("slogan")} className="hover:text-[color:var(--color-ink)]">Slogan</a>
+              <a href={productUrl("tarot")} className="hover:text-[color:var(--color-ink)]">塔罗</a>
+              <a href={productUrl("daily")} className="hover:text-[color:var(--color-ink)]">日签</a>
+              <a href={productUrl("jargon")} className="hover:text-[color:var(--color-ink)]">黑话词典</a>
             </div>
           </div>
         </footer>

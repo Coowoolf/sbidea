@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { unicorns } from "@/lib/unicorns";
+import { productUrl } from "@/lib/urls";
 
 export const metadata: Metadata = {
   title: "SB 独角兽名人堂 · 那些发布时被骂 SB、现在估值百亿的公司",
@@ -58,7 +59,7 @@ export default function HallPage() {
         <p className="mt-2 text-[color:var(--color-muted)]">
           名人堂会持续更新。
           如果你知道哪家公司发布时被骂、现在封神，欢迎发邮件到 hi@sbidea.ai，
-          也可以直接去 <Link href="/generator" className="underline font-bold">生成器</Link> 生成一个，说不定下一个独角兽就是你。
+          也可以直接去 <a href={productUrl("generator")} className="underline font-bold">生成器</a> 生成一个，说不定下一个独角兽就是你。
         </p>
       </section>
     </div>

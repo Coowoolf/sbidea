@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getUnicorn, unicorns } from "@/lib/unicorns";
+import { productUrl } from "@/lib/urls";
 
 type Params = { slug: string };
 
@@ -113,9 +114,9 @@ export default async function UnicornDetail({
       </section>
 
       <section className="mt-16 flex flex-wrap gap-3">
-        <Link href="/generator" className="sb-btn">
+        <a href={productUrl("generator")} className="sb-btn">
           🎲 我也来一个 SB 点子
-        </Link>
+        </a>
         <Link href="/hall" className="sb-btn sb-btn-ghost">
           🦄 看更多独角兽
         </Link>

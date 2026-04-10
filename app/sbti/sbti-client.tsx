@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+import { useCallback, useRef, useMemo, useState } from "react";
+import { productUrl } from "@/lib/urls";
 import {
   QUESTIONS,
   TYPES,
@@ -367,24 +367,60 @@ function ProfileResult({
     ].join("\n");
   }, [sbtiCode, mbtiType, pNumber, profile]);
 
-  async function handleShare() {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleShareImage = useCallback(async () => {
+    const el = cardRef.current;
+    if (!el) return;
     try {
+      const { default: html2canvas } = await import("html2canvas-pro");
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+
+      // Try native share with file (mobile)
       if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({
-          title: `我是创业人格 #${pNumber} · ${profile.name}`,
-          text: shareText,
-        });
-        return;
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File(
+          [blob],
+          `sbti-${sbtiCode}-${mbtiType}-${pNumber}.png`,
+          { type: "image/png" }
+        );
+        try {
+          await navigator.share({
+            title: `我是创业人格 #${pNumber} · ${profile.name}`,
+            text: shareText,
+            files: [file],
+          });
+          return;
+        } catch {
+          /* files share not supported, fall through to download */
+        }
       }
-      await navigator.clipboard.writeText(shareText);
-      alert("已复制到剪贴板，去分享一下吧");
+
+      // Fallback: download PNG
+      const link = document.createElement("a");
+      link.download = `SBTI-${sbtiCode}-${pNumber}.png`;
+      link.href = dataUrl;
+      link.click();
     } catch {
-      /* ignore */
+      // Ultimate fallback: copy text
+      try {
+        await navigator.clipboard.writeText(shareText);
+        alert("图片生成失败，已复制文字到剪贴板");
+      } catch {
+        /* ignore */
+      }
     }
-  }
+  }, [sbtiCode, mbtiType, pNumber, profile, shareText]);
 
   return (
     <div className="space-y-6">
+      {/* Shareable card region (captured by html2canvas) */}
+      <div ref={cardRef} className="space-y-6">
       {/* Hero card */}
       <div
         className="sb-card slide-up relative overflow-hidden p-8 text-white md:p-10"
@@ -484,9 +520,9 @@ function ProfileResult({
         </p>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           {profile.sbIdeas.map((idea) => (
-            <Link
+            <a
               key={idea.name}
-              href={`/generator`}
+              href={productUrl("generator")}
               className="flex flex-col rounded-xl border-2 border-[color:var(--color-ink)] bg-transparent p-4 transition-transform hover:-translate-y-0.5 hover:bg-[color:var(--color-ink)] hover:text-[color:var(--color-paper)]"
             >
               <div className="text-lg font-black">{idea.name}</div>
@@ -494,33 +530,41 @@ function ProfileResult({
               <div className="mt-3 border-t border-[color:var(--color-line)] pt-2 text-xs text-[color:var(--color-muted)]">
                 💡 {idea.whyFit}
               </div>
-            </Link>
+            </a>
           ))}
         </div>
         <div className="mt-4 text-center">
-          <Link
-            href="/generator"
+          <a
+            href={productUrl("generator")}
             className="text-sm font-bold underline"
           >
             → 去 SB 想法生成器探索更多
-          </Link>
+          </a>
         </div>
       </div>
 
-      {/* Fortune */}
-      <div className="sb-card bg-[color:var(--color-ink)] p-6 text-[color:var(--color-paper)] md:p-8">
-        <div className="mb-3 text-xs font-bold uppercase tracking-[0.3em] opacity-60">
-          创业运势
+      {/* Fortune — use inline style to override .sb-card background shorthand */}
+      {profile.fortune && profile.fortune.trim().length > 0 && (
+        <div
+          className="sb-card p-6 md:p-8"
+          style={{ background: "var(--color-ink)", color: "var(--color-paper)" }}
+        >
+          <div className="mb-3 text-xs font-bold uppercase tracking-[0.3em] opacity-60">
+            创业运势
+          </div>
+          <p className="whitespace-pre-wrap break-words text-lg italic leading-relaxed">
+            {profile.fortune}
+          </p>
         </div>
-        <p className="whitespace-pre-wrap break-words text-lg italic leading-relaxed">
-          {profile.fortune}
-        </p>
+      )}
+
+      {/* Close cardRef wrapper */}
       </div>
 
-      {/* Actions */}
+      {/* Actions (outside cardRef so buttons aren't captured in screenshot) */}
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={handleShare} className="sb-btn">
-          📋 分享我的创业人格
+        <button type="button" onClick={handleShareImage} className="sb-btn">
+          📸 保存图片 / 分享
         </button>
         <button
           type="button"
