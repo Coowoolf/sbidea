@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { productUrl, homeUrl } from "@/lib/urls";
+import { AdventureProvider } from "@/components/adventure-provider";
+import { AdventureDetect } from "@/components/adventure-detect";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sbidea.ai";
@@ -94,7 +96,10 @@ export default function RootLayout({
             </a>
           </div>
         </header>
-        <main>{children}</main>
+        <AdventureProvider>
+          <main>{children}</main>
+          <AdventureDetect />
+        </AdventureProvider>
         <footer className="mt-24 border-t-2 border-[color:var(--color-ink)] bg-[color:var(--color-paper)]">
           <div className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-8 text-sm text-[color:var(--color-muted)] md:flex-row md:items-center md:justify-between">
             <div>
