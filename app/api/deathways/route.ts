@@ -65,18 +65,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await withModelFallback("deathways", (model) =>
-      generateText({
+    const output = await withModelFallback("deathways", async (model) => {
+      const result = await generateText({
         model,
         maxRetries: 0,
         output: Output.object({ schema: DeathSchema }),
         system: SYSTEM_PROMPT,
         prompt: `用户的点子：\n\n"""\n${cleaned}\n"""\n\n请预言它的 7 种死法。`,
         temperature: 1.0,
-      })
-    );
+      });
+      return result.output;
+    });
 
-    return Response.json({ ok: true, oracle: result.output });
+    return Response.json({ ok: true, oracle: output });
   } catch (error) {
     console.error("[/api/deathways]", error);
     return Response.json(

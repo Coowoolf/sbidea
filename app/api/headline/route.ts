@@ -83,18 +83,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await withModelFallback("headline", (model) =>
-      generateText({
+    const output = await withModelFallback("headline", async (model) => {
+      const result = await generateText({
         model,
         maxRetries: 0,
         output: Output.object({ schema: ArticleSchema }),
         system: SYSTEM_PROMPT,
         prompt: `用户的创业点子：\n\n"""\n${idea}\n"""\n\n请为这个点子生成一篇完整的融资新闻稿。`,
         temperature: 0.95,
-      })
-    );
+      });
+      return result.output;
+    });
 
-    return Response.json({ ok: true, article: result.output });
+    return Response.json({ ok: true, article: output });
   } catch (error) {
     console.error("[/api/headline]", error);
     return Response.json(

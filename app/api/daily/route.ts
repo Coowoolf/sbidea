@@ -42,8 +42,8 @@ const SYSTEM_PROMPT = `你是一个给朋友圈写『反成功学』式日签的
 
 export async function POST() {
   try {
-    const result = await withModelFallback("daily", (model) =>
-      generateText({
+    const output = await withModelFallback("daily", async (model) => {
+      const result = await generateText({
         model,
         maxRetries: 0,
         output: Output.object({ schema: DailySchema }),
@@ -51,9 +51,10 @@ export async function POST() {
         prompt:
           "请给我一张今日 SB 日签。可以是任何主题的创业或人生反思，要出乎意料。",
         temperature: 1.0,
-      })
-    );
-    return Response.json({ ok: true, daily: result.output });
+      });
+      return result.output;
+    });
+    return Response.json({ ok: true, daily: output });
   } catch (error) {
     console.error("[/api/daily]", error);
     return Response.json(

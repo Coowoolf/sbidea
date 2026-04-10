@@ -101,18 +101,19 @@ export async function POST(req: Request) {
       `现在，请生成 1 个 SB 创业点子，严格按照 schema 返回。`,
     ].join("\n\n");
 
-    const result = await withModelFallback("generate", (model) =>
-      generateText({
+    const output = await withModelFallback("generate", async (model) => {
+      const result = await generateText({
         model,
         maxRetries: 0,
         output: Output.object({ schema: IdeaSchema }),
         system: SYSTEM_PROMPT,
         prompt,
         temperature: 1.0,
-      })
-    );
+      });
+      return result.output;
+    });
 
-    return Response.json({ ok: true, idea: result.output, seed });
+    return Response.json({ ok: true, idea: output, seed });
   } catch (error) {
     console.error("[/api/generate]", error);
     const message =

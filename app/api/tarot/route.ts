@@ -105,18 +105,19 @@ export async function POST(req: Request) {
       )
       .join("\n\n");
 
-    const result = await withModelFallback("tarot", (model) =>
-      generateText({
+    const output = await withModelFallback("tarot", async (model) => {
+      const result = await generateText({
         model,
         maxRetries: 0,
         output: Output.object({ schema: TarotReadingSchema }),
         system: SYSTEM_PROMPT,
         prompt: `用户的问题：\n"""\n${question}\n"""\n\n今晚抽到的 3 张牌：\n\n${cardsText}\n\n请解读。`,
         temperature: 0.9,
-      })
-    );
+      });
+      return result.output;
+    });
 
-    return Response.json({ ok: true, reading: result.output });
+    return Response.json({ ok: true, reading: output });
   } catch (error) {
     console.error("[/api/tarot]", error);
     return Response.json(

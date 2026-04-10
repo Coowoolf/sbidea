@@ -58,18 +58,19 @@ export async function POST(req: Request) {
       (s) => `- ${s.key} (${s.label})：${s.hint}`
     ).join("\n");
 
-    const result = await withModelFallback("slogan", (model) =>
-      generateText({
+    const output = await withModelFallback("slogan", async (model) => {
+      const result = await generateText({
         model,
         maxRetries: 0,
         output: Output.object({ schema: SloganSchema }),
         system: SYSTEM_PROMPT,
         prompt: `产品概念：\n"""\n${cleaned}\n"""\n\n请为以下 8 种风格各输出一条 slogan，styleKey 要严格匹配：\n${styleList}`,
         temperature: 0.95,
-      })
-    );
+      });
+      return result.output;
+    });
 
-    return Response.json({ ok: true, result: result.output });
+    return Response.json({ ok: true, result: output });
   } catch (error) {
     console.error("[/api/slogan]", error);
     return Response.json(
