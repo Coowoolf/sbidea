@@ -89,7 +89,8 @@ export type ProductKey =
   | "tarot"
   | "daily"
   | "jargon"
-  | "roast";
+  | "roast"
+  | "adventure-story";
 
 const MODEL_OVERRIDES: Partial<Record<ProductKey, ModelId>> = {};
 
