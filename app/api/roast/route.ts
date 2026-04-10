@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { MODELS } from "@/lib/models";
+import { getStreamingModelFor } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -46,7 +46,8 @@ export async function POST(req: Request) {
     }
 
     const result = streamText({
-      model: MODELS.fast,
+      model: getStreamingModelFor("roast"),
+      maxRetries: 0,
       system: SYSTEM_PROMPT,
       prompt: `用户的创业点子：\n\n"""\n${cleaned}\n"""\n\n现在开始你的鉴定。`,
       temperature: 0.95,

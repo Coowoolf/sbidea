@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -58,13 +58,16 @@ export async function POST(req: Request) {
       (s) => `- ${s.key} (${s.label})：${s.hint}`
     ).join("\n");
 
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: SloganSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `产品概念：\n"""\n${cleaned}\n"""\n\n请为以下 8 种风格各输出一条 slogan，styleKey 要严格匹配：\n${styleList}`,
-      temperature: 0.95,
-    });
+    const result = await withModelFallback("slogan", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: SloganSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `产品概念：\n"""\n${cleaned}\n"""\n\n请为以下 8 种风格各输出一条 slogan，styleKey 要严格匹配：\n${styleList}`,
+        temperature: 0.95,
+      })
+    );
 
     return Response.json({ ok: true, result: result.output });
   } catch (error) {

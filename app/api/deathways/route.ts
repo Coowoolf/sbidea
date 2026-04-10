@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -65,13 +65,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: DeathSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `用户的点子：\n\n"""\n${cleaned}\n"""\n\n请预言它的 7 种死法。`,
-      temperature: 1.0,
-    });
+    const result = await withModelFallback("deathways", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: DeathSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `用户的点子：\n\n"""\n${cleaned}\n"""\n\n请预言它的 7 种死法。`,
+        temperature: 1.0,
+      })
+    );
 
     return Response.json({ ok: true, oracle: result.output });
   } catch (error) {

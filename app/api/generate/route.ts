@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -101,13 +101,16 @@ export async function POST(req: Request) {
       `现在，请生成 1 个 SB 创业点子，严格按照 schema 返回。`,
     ].join("\n\n");
 
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: IdeaSchema }),
-      system: SYSTEM_PROMPT,
-      prompt,
-      temperature: 1.0,
-    });
+    const result = await withModelFallback("generate", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: IdeaSchema }),
+        system: SYSTEM_PROMPT,
+        prompt,
+        temperature: 1.0,
+      })
+    );
 
     return Response.json({ ok: true, idea: result.output, seed });
   } catch (error) {

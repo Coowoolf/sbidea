@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -83,13 +83,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: ArticleSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `用户的创业点子：\n\n"""\n${idea}\n"""\n\n请为这个点子生成一篇完整的融资新闻稿。`,
-      temperature: 0.95,
-    });
+    const result = await withModelFallback("headline", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: ArticleSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `用户的创业点子：\n\n"""\n${idea}\n"""\n\n请为这个点子生成一篇完整的融资新闻稿。`,
+        temperature: 0.95,
+      })
+    );
 
     return Response.json({ ok: true, article: result.output });
   } catch (error) {

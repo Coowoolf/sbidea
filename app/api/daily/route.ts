@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -42,14 +42,17 @@ const SYSTEM_PROMPT = `你是一个给朋友圈写『反成功学』式日签的
 
 export async function POST() {
   try {
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: DailySchema }),
-      system: SYSTEM_PROMPT,
-      prompt:
-        "请给我一张今日 SB 日签。可以是任何主题的创业或人生反思，要出乎意料。",
-      temperature: 1.0,
-    });
+    const result = await withModelFallback("daily", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: DailySchema }),
+        system: SYSTEM_PROMPT,
+        prompt:
+          "请给我一张今日 SB 日签。可以是任何主题的创业或人生反思，要出乎意料。",
+        temperature: 1.0,
+      })
+    );
     return Response.json({ ok: true, daily: result.output });
   } catch (error) {
     console.error("[/api/daily]", error);

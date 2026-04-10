@@ -26,8 +26,10 @@
 
 - **Next.js 16** (App Router, Turbopack)
 - **React 19** + Tailwind CSS v4
-- **AI SDK v6** via **Vercel AI Gateway**（`provider/model` 字符串，无需直连 Provider）
-- 主力模型：`anthropic/claude-haiku-4-5`（快 + 便宜）
+- **AI SDK v6** via **OpenRouter**（community provider `@openrouter/ai-sdk-provider`）
+- 主力模型：`google/gemma-4-31b-it:free`（**免费**）
+- 备用模型：`z-ai/glm-4.5-air:free`（中文能力强，**免费**）
+- 所有 `generateText + Output.object` 调用用 `withModelFallback()` 包装：primary 失败自动降级到 fallback 一次
 - 全部 Node.js runtime（Vercel Fluid Compute）
 - 独角兽名人堂用 `generateStaticParams` 静态生成，每一条独立 SEO URL
 - SBTI 测试纯客户端，零 AI 调用成本
@@ -43,23 +45,31 @@ npm run dev
 
 ### 环境变量
 
-唯一必需的是 AI Gateway 凭证之一（二选一）：
+只需一个 OpenRouter key（免费注册）：
 
 ```bash
-# 方式 A：直接使用 AI Gateway API key（从 vercel.com/ai-gateway 拿）
-AI_GATEWAY_API_KEY=...
-
-# 方式 B：直接用 Anthropic API key（不走 gateway）
-ANTHROPIC_API_KEY=...
+# 从 https://openrouter.ai/keys 拿一个，粘贴进 .env.local
+OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxxxxxxxxx
 ```
 
-部署到 Vercel 后，如果项目绑定了账号，会自动通过 OIDC 获取 Gateway token，**不需要任何环境变量**。
+部署到 Vercel 后，在 `Project → Settings → Environment Variables` 加同名变量（scope 选 Production / Preview / Development 全部）。`.env.local` 只用于本地开发，永远不要提交。
 
 可选：
 
 ```bash
 NEXT_PUBLIC_SITE_URL=https://sbidea.ai
 ```
+
+### 切换模型
+
+`lib/models.ts` 里的 `PRIMARY_MODEL_ID` / `FALLBACK_MODEL_ID` 可以换成任何 OpenRouter 支持的模型 ID。免费模型列表：
+
+```bash
+curl -s https://openrouter.ai/api/v1/models | \
+  python3 -c "import json,sys;[print(m['id']) for m in json.load(sys.stdin)['data'] if ':free' in m['id']]"
+```
+
+如果要上付费模型，同一个文件改 ID 即可，key 复用。
 
 ## 部署到 Vercel
 

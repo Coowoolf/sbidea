@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -71,13 +71,16 @@ export async function POST(req: Request) {
         ? `方向：人话 → 投资人黑话。请把下面这句话翻译成听起来特别专业、特别能骗钱的投资人语言。`
         : `方向：投资人黑话 → 人话。请把下面这句话翻译成你妈能听懂的人话，戳破所有 buzz word。`;
 
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: JargonSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `${directionNote}\n\n原文：\n"""\n${text}\n"""\n\n请严格按 schema 输出。`,
-      temperature: 0.95,
-    });
+    const result = await withModelFallback("jargon", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: JargonSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `${directionNote}\n\n原文：\n"""\n${text}\n"""\n\n请严格按 schema 输出。`,
+        temperature: 0.95,
+      })
+    );
 
     return Response.json({ ok: true, result: result.output, direction });
   } catch (error) {

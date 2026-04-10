@@ -1,6 +1,6 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { MODELS } from "@/lib/models";
+import { withModelFallback } from "@/lib/models";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -78,13 +78,16 @@ export async function POST(req: Request) {
       )
       .join("\n\n");
 
-    const result = await generateText({
-      model: MODELS.fast,
-      output: Output.object({ schema: TarotReadingSchema }),
-      system: SYSTEM_PROMPT,
-      prompt: `用户的问题：\n"""\n${question}\n"""\n\n今晚抽到的 3 张牌：\n\n${cardsText}\n\n请解读。`,
-      temperature: 0.9,
-    });
+    const result = await withModelFallback("tarot", (model) =>
+      generateText({
+        model,
+        maxRetries: 0,
+        output: Output.object({ schema: TarotReadingSchema }),
+        system: SYSTEM_PROMPT,
+        prompt: `用户的问题：\n"""\n${question}\n"""\n\n今晚抽到的 3 张牌：\n\n${cardsText}\n\n请解读。`,
+        temperature: 0.9,
+      })
+    );
 
     return Response.json({ ok: true, reading: result.output });
   } catch (error) {
