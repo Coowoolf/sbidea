@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 import { productUrl } from "@/lib/urls";
-import { updatePipeline } from "@/lib/adventure";
 import { useAdventure } from "@/components/adventure-provider";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
@@ -546,8 +545,8 @@ function ProfileResult({
               key={idea.name}
               type="button"
               onClick={() => {
-                updatePipeline({ selectedIdea: idea.name, selectedIdeaDetail: idea.oneLiner });
-                window.location.href = productUrl("generator");
+                const hint = `${idea.name} — ${idea.oneLiner}`;
+                window.location.href = `${productUrl("generator")}?hint=${encodeURIComponent(hint)}`;
               }}
               className="flex flex-col rounded-xl border-2 border-[color:var(--color-ink)] bg-transparent p-4 text-left transition-transform hover:-translate-y-0.5 hover:bg-[color:var(--color-ink)] hover:text-[color:var(--color-paper)]"
             >

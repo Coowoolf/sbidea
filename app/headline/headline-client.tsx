@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { FakeArticle } from "../api/headline/route";
 import { useAdventure } from "@/components/adventure-provider";
-import { loadAdventure } from "@/lib/adventure";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
 
@@ -19,11 +18,12 @@ export function HeadlineClient() {
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
 
-  // Pre-fill idea from adventure pipeline (Generator → Headline)
+  // Pre-fill idea from URL params (Roast → Headline via ?idea=...)
   useEffect(() => {
-    const adv = loadAdventure();
-    if (adv?.generatedIdeaFull && !idea) {
-      setIdea(adv.generatedIdeaFull.slice(0, 400)); // respect the 400 char limit
+    const params = new URLSearchParams(window.location.search);
+    const ideaParam = params.get("idea");
+    if (ideaParam && !idea) {
+      setIdea(ideaParam.slice(0, 400)); // respect the 400 char limit
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // only on mount

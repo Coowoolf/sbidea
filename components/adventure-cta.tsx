@@ -18,7 +18,7 @@ import { productUrl } from "@/lib/urls";
  * Links to the next station's subdomain via productUrl().
  * If this is the last station, links to adventure hub instead.
  */
-export function AdventureCTA({ product }: { product: string }) {
+export function AdventureCTA({ product, nextQuery }: { product: string; nextQuery?: string }) {
   const { adventure, isActive } = useAdventure();
   if (!isActive || !adventure) return null;
 
@@ -44,10 +44,11 @@ export function AdventureCTA({ product }: { product: string }) {
 
   // Next station exists — show CTA to continue
   const nextLabel = STATION_LABELS[next];
+  const href = productUrl(next) + (nextQuery ? `?${nextQuery}` : "");
 
   return (
     <a
-      href={productUrl(next)}
+      href={href}
       className="sb-card slide-up mt-6 flex items-center gap-3 border-[color:var(--color-accent)] p-5 font-bold transition-transform hover:-translate-y-0.5"
     >
       <span className="text-2xl">✅</span>
