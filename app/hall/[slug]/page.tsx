@@ -45,12 +45,12 @@ export default async function UnicornDetail({
   return (
     <div className="mx-auto max-w-3xl px-5 pt-12 pb-24">
       <nav className="mb-6 text-sm">
-        <Link
-          href="/hall"
+        <a
+          href={productUrl("hall")}
           className="font-bold text-[color:var(--color-muted)] hover:text-[color:var(--color-ink)]"
         >
           ← 返回名人堂
-        </Link>
+        </a>
       </nav>
 
       <header className="mb-10">
@@ -117,9 +117,9 @@ export default async function UnicornDetail({
         <a href={productUrl("generator")} className="sb-btn">
           🎲 我也来一个 SB 点子
         </a>
-        <Link href="/hall" className="sb-btn sb-btn-ghost">
+        <a href={productUrl("hall")} className="sb-btn sb-btn-ghost">
           🦄 看更多独角兽
-        </Link>
+        </a>
       </section>
     </div>
   );

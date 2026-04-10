@@ -29,6 +29,7 @@ const SUBDOMAIN_MAP: Record<string, string> = {
   tarot: "/tarot",
   daily: "/daily",
   jargon: "/jargon",
+  adventure: "/adventure",
 };
 
 export function proxy(request: NextRequest) {
