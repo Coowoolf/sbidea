@@ -509,3 +509,48 @@ export function codeOf(scores: Record<AxisLetter, number>): string {
 export function emptyScores(): Record<AxisLetter, number> {
   return { W: 0, Z: 0, F: 0, S: 0, I: 0, T: 0, M: 0, A: 0 };
 }
+
+/* -------------------------------------------------------------------------- */
+/* MBTI types for Phase 2 selection                                            */
+/* -------------------------------------------------------------------------- */
+
+export type MbtiType = {
+  code: string;
+  name: string;
+  emoji: string;
+  brief: string;
+};
+
+export const MBTI_TYPES: MbtiType[] = [
+  { code: "INTJ", name: "建筑师", emoji: "🏗️", brief: "战略思维，独立果断" },
+  { code: "INTP", name: "逻辑学家", emoji: "🔬", brief: "分析理性，创新发明" },
+  { code: "ENTJ", name: "指挥官", emoji: "👑", brief: "大胆领导，意志坚定" },
+  { code: "ENTP", name: "辩论家", emoji: "⚡", brief: "聪明好奇，不走寻常路" },
+  { code: "INFJ", name: "提倡者", emoji: "🌿", brief: "安静神秘，有理想主义" },
+  { code: "INFP", name: "调停者", emoji: "🦋", brief: "诗意善良，利他主义" },
+  { code: "ENFJ", name: "主人公", emoji: "🌟", brief: "魅力感染，天生领袖" },
+  { code: "ENFP", name: "竞选者", emoji: "🎆", brief: "热情创意，自由灵魂" },
+  { code: "ISTJ", name: "物流师", emoji: "📋", brief: "可靠负责，脚踏实地" },
+  { code: "ISFJ", name: "守卫者", emoji: "🛡️", brief: "温暖尽职，默默保护" },
+  { code: "ESTJ", name: "总经理", emoji: "📊", brief: "管理天赋，秩序井然" },
+  { code: "ESFJ", name: "执政官", emoji: "🤝", brief: "关心他人，社交达人" },
+  { code: "ISTP", name: "鉴赏家", emoji: "🔧", brief: "大胆实际，动手大师" },
+  { code: "ISFP", name: "探险家", emoji: "🎨", brief: "灵活魅力，艺术探索" },
+  { code: "ESTP", name: "企业家", emoji: "🎯", brief: "精明灵活，直接果断" },
+  { code: "ESFP", name: "表演者", emoji: "🎭", brief: "自发热情，精力充沛" },
+];
+
+export const MBTI_UNKNOWN = "UNKNOWN";
+
+/**
+ * Deterministic hash: SBTI code + MBTI type → personality number 1-100.
+ * Same combination always yields the same number.
+ */
+export function personalityNumber(sbtiCode: string, mbtiType: string): number {
+  const key = `${sbtiCode}-${mbtiType}`.toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) & 0x7fffffff;
+  }
+  return (hash % 100) + 1;
+}
