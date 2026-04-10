@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 import { productUrl } from "@/lib/urls";
+import { updatePipeline } from "@/lib/adventure";
 import { useAdventure } from "@/components/adventure-provider";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
@@ -541,17 +542,21 @@ function ProfileResult({
         </p>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           {profile.sbIdeas.map((idea) => (
-            <a
+            <button
               key={idea.name}
-              href={productUrl("generator")}
-              className="flex flex-col rounded-xl border-2 border-[color:var(--color-ink)] bg-transparent p-4 transition-transform hover:-translate-y-0.5 hover:bg-[color:var(--color-ink)] hover:text-[color:var(--color-paper)]"
+              type="button"
+              onClick={() => {
+                updatePipeline({ selectedIdea: idea.name, selectedIdeaDetail: idea.oneLiner });
+                window.location.href = productUrl("generator");
+              }}
+              className="flex flex-col rounded-xl border-2 border-[color:var(--color-ink)] bg-transparent p-4 text-left transition-transform hover:-translate-y-0.5 hover:bg-[color:var(--color-ink)] hover:text-[color:var(--color-paper)]"
             >
               <div className="text-lg font-black">{idea.name}</div>
               <div className="mt-1 text-sm">{idea.oneLiner}</div>
               <div className="mt-3 border-t border-[color:var(--color-line)] pt-2 text-xs text-[color:var(--color-muted)]">
                 💡 {idea.whyFit}
               </div>
-            </a>
+            </button>
           ))}
         </div>
         <div className="mt-4 text-center">

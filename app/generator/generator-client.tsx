@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { GeneratedIdea } from "../api/generate/route";
 import { useAdventure } from "@/components/adventure-provider";
+import { loadAdventure, updatePipeline } from "@/lib/adventure";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
 
@@ -18,6 +19,15 @@ export function GeneratorClient() {
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
 
+  // Pre-fill hint from adventure pipeline (SBTI → Generator)
+  useEffect(() => {
+    const adv = loadAdventure();
+    if (adv?.selectedIdea && !hint) {
+      setHint(adv.selectedIdea + (adv.selectedIdeaDetail ? " — " + adv.selectedIdeaDetail : ""));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // only on mount
+
   useEffect(() => {
     if (state.status === "success" && !stoppedRef.current) {
       stoppedRef.current = true;
@@ -25,6 +35,10 @@ export function GeneratorClient() {
         name: state.idea.name,
         oneLiner: state.idea.oneLiner,
         sbScore: state.idea.sbScore,
+      });
+      // Save generated idea to pipeline for downstream tools (Roast, Headline)
+      updatePipeline({
+        generatedIdeaFull: `${state.idea.name} — ${state.idea.oneLiner}\n\n为什么看起来 SB：${state.idea.whySB}\n\n为什么其实能成：${state.idea.whyWorks}`,
       });
     }
     if (state.status !== "success") {

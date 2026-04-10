@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAdventure } from "@/components/adventure-provider";
+import { loadAdventure } from "@/lib/adventure";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
 
@@ -24,6 +25,15 @@ export function RoastClient() {
   const abortRef = useRef<AbortController | null>(null);
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
+
+  // Pre-fill idea from adventure pipeline (Generator → Roast)
+  useEffect(() => {
+    const adv = loadAdventure();
+    if (adv?.generatedIdeaFull && !idea) {
+      setIdea(adv.generatedIdeaFull.slice(0, 600)); // respect the 600 char limit
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // only on mount
 
   useEffect(() => {
     if (state.status === "done" && !stoppedRef.current) {

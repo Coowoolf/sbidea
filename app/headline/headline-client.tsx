@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FakeArticle } from "../api/headline/route";
 import { useAdventure } from "@/components/adventure-provider";
+import { loadAdventure } from "@/lib/adventure";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
 
@@ -17,6 +18,15 @@ export function HeadlineClient() {
   const [state, setState] = useState<State>({ status: "idle" });
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
+
+  // Pre-fill idea from adventure pipeline (Generator → Headline)
+  useEffect(() => {
+    const adv = loadAdventure();
+    if (adv?.generatedIdeaFull && !idea) {
+      setIdea(adv.generatedIdeaFull.slice(0, 400)); // respect the 400 char limit
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // only on mount
 
   useEffect(() => {
     if (state.status === "success" && !stoppedRef.current) {

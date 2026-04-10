@@ -23,6 +23,12 @@ export type AdventureState = {
   story?: { style: StoryStyle; content: string; generatedAt: string };
   startedAt: string;
   version: 1;
+
+  /** 管道数据：贯穿旅程的"那个点子" */
+  selectedIdea?: string;
+  selectedIdeaDetail?: string;
+  /** generator 产出的完整描述，自动喂给 roast/headline */
+  generatedIdeaFull?: string;
 };
 
 const STORAGE_KEY = "sbidea-adventure";
@@ -136,6 +142,16 @@ export function recordStop(
   if (idx >= 0 && idx >= state.currentStep) {
     state.currentStep = Math.min(idx + 1, state.route.length);
   }
+  saveAdventure(state);
+}
+
+/** Update pipeline data (the idea flowing through the journey). */
+export function updatePipeline(
+  updates: Partial<Pick<AdventureState, "selectedIdea" | "selectedIdeaDetail" | "generatedIdeaFull">>
+): void {
+  const state = loadAdventure();
+  if (!state) return;
+  Object.assign(state, updates);
   saveAdventure(state);
 }
 
