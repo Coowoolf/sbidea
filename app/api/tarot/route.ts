@@ -5,22 +5,35 @@ import { withModelFallback } from "@/lib/models";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// NOTE: we intentionally do NOT use .min()/.max() here. Free models on
+// OpenRouter are very sensitive to length constraints on strings — adding
+// them causes "could not parse the response" failures even on gpt-oss-120b.
+// The length hints live in the prose descriptions and the system prompt
+// only; validation happens post-hoc in application code if needed.
 const TarotReadingSchema = z.object({
   overall: z
     .string()
-    .describe("整体解读，120-180 字，要像真的塔罗占卜师在说话，有仪式感"),
+    .describe(
+      "整体解读，120-180 字。【只写纵观三张牌的整体感受】，不要把后面 past/challenge/outcome 的内容提前塞进来。"
+    ),
   past: z
     .string()
-    .describe("第一张牌（现状）的针对性解读，60-100 字"),
+    .describe(
+      "【只】针对第一张牌（现状/past 位置）的解读，60-100 字。要和用户的问题直接相关。"
+    ),
   challenge: z
     .string()
-    .describe("第二张牌（挑战）的针对性解读，60-100 字"),
+    .describe(
+      "【只】针对第二张牌（challenge 位置）的解读，60-100 字。要和用户的问题直接相关。"
+    ),
   outcome: z
     .string()
-    .describe("第三张牌（结果）的针对性解读，60-100 字"),
+    .describe(
+      "【只】针对第三张牌（outcome 位置）的解读，60-100 字。要和用户的问题直接相关。"
+    ),
   actionTip: z
     .string()
-    .describe("一条可以今晚就开始做的具体行动建议，30-60 字"),
+    .describe("一条可以今晚就开始做的具体行动建议，30-60 字。"),
 });
 
 export type TarotReading = z.infer<typeof TarotReadingSchema>;
@@ -35,12 +48,26 @@ type CardInput = {
 const SYSTEM_PROMPT = `你是『SB Idea Lab』旗下的创业塔罗占卜师。
 你使用一副 22 张大阿卡那创业塔罗，帮用户解读他们的创业命运。
 
-风格要求：
+## 输出结构（非常重要，严格遵守）
+
+你必须输出 5 个独立的字段，每个字段写完整的一段话，不得合并、不得遗漏：
+
+1. overall    ——【只】写纵观三张牌的整体感受。120-180 字。
+2. past       ——【只】写第一张牌（现状）的针对性解读。60-100 字。
+3. challenge  ——【只】写第二张牌（挑战）的针对性解读。60-100 字。
+4. outcome    ——【只】写第三张牌（结果）的针对性解读。60-100 字。
+5. actionTip  —— 一条今晚就能开始做的具体行动建议。30-60 字。
+
+⚠️ 严禁把 past/challenge/outcome 的内容提前塞进 overall 字段。
+⚠️ 严禁让 past/challenge/outcome 为空字符串。
+⚠️ 每一段都必须是完整的句子，不要只给关键词。
+
+## 风格要求
+
 1. 全部中文，语气有仪式感但不故弄玄虚
-2. 要结合用户提供的『问题 / 现状』来解读，不能只是抄牌面含义
-3. 三张牌分别代表：现状 / 挑战 / 结果，要有逻辑递进
-4. 不要迷信，不要算命，要把塔罗作为『强制换角度思考』的工具
-5. 严格按 schema 输出 JSON`;
+2. 必须结合用户提供的『问题 / 现状』来解读，不能只抄牌面含义
+3. 三张牌有逻辑递进：past → challenge → outcome
+4. 不要迷信不要算命，把塔罗作为『强制换角度思考』的工具`;
 
 export async function POST(req: Request) {
   try {
