@@ -84,10 +84,11 @@ app/api/gf/token/route.ts         签 Agora RTC token
 app/api/gf/start/route.ts         代理 POST /start 到 TEN agent backend,注入 gf 的 prompt
 app/api/gf/stop/route.ts          代理 POST /stop 到 TEN agent backend
 lib/gfs/types.ts                  Gf 类型定义
-lib/gfs/index.ts                  gf 注册表(getGfBySlug / listGfs)
+lib/gfs/index.ts                  gf 注册表(getGf / listGfs)
 lib/gfs/characters/xiao-ye.ts     小野的 config
-lib/agora-web.ts                  Agora RTC Web client 封装(join / leave / toggle mic)
-lib/transcript.ts                 解析 emotion tag + 汇总情绪占比
+lib/agora-web.ts                  Agora RTC Web client 封装(live mode / host role / join / leave / toggle mic / stream-message 回调)
+lib/stream-message-parser.ts      Agora DataStream 协议解析(pipe-delim + base64 + 多段拼接)
+lib/transcript.ts                 从 text 里抽 [emotion-tag] + emotion mix 聚合
 proxy.ts                          新增 "gf" 子域映射到 /gf
 ```
 
@@ -115,11 +116,12 @@ export type Gf = {
 1. 用户点"让她开口"
 2. 前端 `getUserMedia({audio:true})` 拿麦克风权限
 3. 前端 `POST /api/gf/token { channel, uid }` → 服务端用 `AGORA_APP_CERT` 签 token,返回
-4. 前端 Agora Web SDK `join(appId, channel, token, uid)`
-5. 前端 `POST /api/gf/start { channel, uid, gfSlug: "xiao-ye" }` → 服务端查 `lib/gfs` 拿 system prompt,带 `graph_name=voice_assistant_rewrite3` + `properties={system_prompt}` 调 TEN `/start`
-6. Agent 加入同 channel,她先说 greeting → 前端 `onFirstRemoteAudio` 触发"她说话"动画
-7. ConvoAI transcript 通过 Agora RTM / data stream 实时到前端 → `lib/transcript` 解析 emotion tag → 更新药丸条 + 累积
-8. 用户点挂断 → `POST /api/gf/stop { channel }` + Agora leave → `sessionStorage.setItem("gf-call-summary", ...)` → 跳 `/end`
+4. 前端 Agora Web SDK:**`mode:"live" + codec:"vp8"`**,`setClientRole("host")`,然后 `join(appId, channel, token, uid)` + 发布麦克风 + 订阅音频
+5. 前端 `POST /api/gf/start { channel, uid, gfSlug }` → 服务端查 `lib/gfs` 拿 system prompt,带 `graph_name=voice_assistant_rewrite3` + `bot_uid=2001` + `properties={openai_llm2_python: {system_prompt}}` 调 TEN `/start`
+6. Agent(uid=2001)加入同 channel,她先说 greeting → 前端 `user-published` 触发订阅 + "她说话"动画
+7. 字幕走 **Agora RTC DataStream**(不是 RTM,Android demo 里 RTM 已注释掉),监听 `stream-message` 事件:`Uint8Array` → UTF-8 string → pipe-delimited 格式 `messageId|partIndex|totalParts|base64Content` → 多段拼接 + base64 decode + JSON parse → 按 `object` / `data_type` + `role` 分派 `assistant.transcription` / `user.transcription` / `message.interrupt` / `message.state`
+8. 字幕 JSON 里的 `text` 字段用 `parseTaggedLine` 摘 `[emotion-tag]`,用 `turn_id` 做消息聚合(同 turn_id 是同一句的多次更新,不要 append,要替换)
+9. 用户点挂断 → `POST /api/gf/stop { channel }` + Agora leave → `sessionStorage.setItem("gf-call-summary", ...)` → 跳 `/end`
 
 ### Channel 生成 + Session 超时
 
@@ -164,14 +166,16 @@ await fetch(`${process.env.AGORA_TOKEN_BACKEND}/start`, {
     request_id: crypto.randomUUID(),
     channel_name: channel,
     user_uid: uid,
+    bot_uid: 2001,                         // 与 Android demo 对齐,前端据此识别 agent audio
     graph_name: "voice_assistant_rewrite3",
-    properties: { "llm.system_prompt": gf.systemPrompt },
+    properties: {
+      // 经用户(后端所有者)确认:此 graph 的 LLM 节点叫 "openai_llm2_python",用的是 doubao mini
+      openai_llm2_python: { system_prompt: gf.systemPrompt },
+    },
     timeout: 300,
   }),
 });
 ```
-
-(字段 `llm.system_prompt` 假设 TEN graph 支持 — 如果实际字段不同,改 key 即可)
 
 ### `POST /api/gf/stop`
 
@@ -185,12 +189,41 @@ await fetch(`${process.env.AGORA_TOKEN_BACKEND}/start`, {
 { "ok": true }
 ```
 
-## 6. Transcript / Emotion tag 处理
+## 6. DataStream 协议 + Emotion tag 处理
 
-TEN rewrite3 graph 会在字幕里嵌入 `[emotion-tag]`,前端:
+分两层(两个纯模块):
+
+### 6.1 `lib/stream-message-parser.ts` — Agora DataStream 协议(参照 `ten-android-kotlin/app/src/main/java/io/agora/convoai/example/startup/utils/MessageParser.kt`)
+
+每个 `stream-message` 事件给到一个 `Uint8Array`。解 UTF-8 后是 pipe-delimited 的一段:
+
+```
+messageId|partIndex|totalParts|base64Content
+```
+
+- 大消息会被拆成多段,要按 `messageId` 缓存,收齐 `totalParts` 之后拼接
+- 拼接后 base64 decode → UTF-8 string → `JSON.parse` → 一个结构化消息
+- 缓存项带 5 分钟 LRU 过期
+
+结构化消息按 `object` 或 `data_type` + `role` 分派:
+
+| 形式 A(RTM-style) | 形式 B(DataStream-style) |
+|---|---|
+| `{"object":"assistant.transcription", "text":..., "turn_id":..., "turn_status":0/1/2, "user_id":..., "stream_id":...}` | `{"data_type":"transcribe", "role":"assistant", "text":..., "is_final":bool, "stream_id":..., "text_ts":...}` |
+| `{"object":"user.transcription", ...}` | `{"data_type":"transcribe", "role":"user", ...}` |
+| `{"object":"message.interrupt", "turn_id":..., "start_ms":...}` | — |
+| `{"object":"message.state", "state":"..."}` | — |
+
+字幕状态:
+- `turn_status` 有值:`0=IN_PROGRESS / 1=END / 2=INTERRUPTED`
+- 只有 `is_final`:`true=END / false=IN_PROGRESS`
+- 按 `turn_id`(或 fallback 到 `stream_id` / `text_ts`)去重 —— 同一个 id 的 `text` 是整句的累积状态,UI 要"替换"而不是"追加"
+
+### 6.2 `lib/transcript.ts` — 文本层情绪 tag 抽取
+
+拿到 `text` 之后再抽 `[emotion-tag]`:
 
 ```ts
-// lib/transcript.ts
 export function parseTaggedLine(line: string): { tags: string[]; body: string } {
   const re = /\[([a-z][a-z0-9\-]*)\]/gi;
   const tags = [...line.matchAll(re)].map((m) => m[1]);
@@ -208,10 +241,10 @@ export function aggregateEmotionMix(tags: string[]): Record<string, number> {
 }
 ```
 
-- 只计她的 tag(用户那侧不会 emit tag,ASR 出来是纯文本)
-- 字幕里保留原始文字,tag 文字灰色淡化
-- 头像下的药丸条取最近 3 个活跃 tag,新 tag 进来覆盖最老的
-- 结束页 emotion mix 用整场汇总(不是只看 top 3)
+- 只计她(assistant)的 tag
+- 字幕里原始文字保留,tag 文字灰色淡化
+- 头像下药丸条取最近 3 个 tag
+- 结束页 emotion mix 用整场汇总
 
 ## 7. 安全 / 密钥
 
