@@ -5,6 +5,7 @@ import { productUrl } from "@/lib/urls";
 import { useAdventure } from "@/components/adventure-provider";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
+import { loadAdventure, startAdventure } from "@/lib/adventure";
 import {
   QUESTIONS,
   TYPES,
@@ -352,21 +353,30 @@ function ProfileResult({
 }) {
   const pNumber = personalityNumber(sbtiCode, mbtiType);
   const bg = `linear-gradient(135deg, ${profile.gradientFrom || "#667eea"}, ${profile.gradientTo || "#764ba2"})`;
-  const { recordStop } = useAdventure();
+  const { setAdventure } = useAdventure();
   const stoppedRef = useRef(false);
 
   useEffect(() => {
-    if (!stoppedRef.current) {
-      stoppedRef.current = true;
-      recordStop("sbti", profile.name, {
-        code: sbtiCode,
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    // Auto-start the adventure the moment the user sees their SBTI result.
+    // Re-start only if missing or a different SBTI/MBTI combo was picked.
+    const existing = loadAdventure();
+    if (
+      !existing ||
+      existing.sbtiCode !== sbtiCode ||
+      existing.mbtiType !== mbtiType
+    ) {
+      const state = startAdventure(
+        sbtiCode,
         mbtiType,
-        number: pNumber,
-        name: profile.name,
-        emoji: profile.emoji,
-      });
+        profile.name,
+        profile.emoji,
+        pNumber,
+      );
+      setAdventure(state);
     }
-  }, [recordStop, profile, sbtiCode, mbtiType, pNumber]);
+  }, [setAdventure, profile, sbtiCode, mbtiType, pNumber]);
 
   const shareText = useMemo(() => {
     const mbtiLabel =

@@ -6,6 +6,7 @@ import { STYLES } from "../api/slogan/route";
 import { useAdventure } from "@/components/adventure-provider";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
+import { getIdeaFromState, loadAdventure } from "@/lib/adventure";
 
 type State =
   | { status: "idle" }
@@ -29,6 +30,20 @@ export function SloganClient() {
   const [state, setState] = useState<State>({ status: "idle" });
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
+
+  // Pre-fill concept: URL param (idea or concept) first, then adventure state
+  useEffect(() => {
+    if (concept) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlConcept = params.get("concept") ?? params.get("idea");
+    if (urlConcept) {
+      setConcept(urlConcept.slice(0, 200));
+      return;
+    }
+    const fromState = getIdeaFromState(loadAdventure());
+    if (fromState) setConcept(fromState.slice(0, 200));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (state.status === "success" && !stoppedRef.current) {
@@ -173,7 +188,12 @@ export function SloganClient() {
         </div>
       )}
 
-      {state.status === "success" && <AdventureCTA product="slogan" />}
+      {state.status === "success" && (
+        <AdventureCTA
+          product="slogan"
+          nextQuery={concept ? `idea=${encodeURIComponent(concept.slice(0, 400))}` : undefined}
+        />
+      )}
     </div>
   );
 }

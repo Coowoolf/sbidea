@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAdventure } from "@/components/adventure-provider";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
+import { getIdeaFromState, loadAdventure } from "@/lib/adventure";
 
 type RoastState =
   | { status: "idle" }
@@ -25,15 +26,19 @@ export function RoastClient() {
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
 
-  // Pre-fill idea from URL params (Generator → Roast via ?idea=...)
+  // Pre-fill idea: URL param first, then fall back to adventure state (cookie)
   useEffect(() => {
+    if (idea) return;
     const params = new URLSearchParams(window.location.search);
-    const ideaParam = params.get("idea");
-    if (ideaParam && !idea) {
-      setIdea(ideaParam.slice(0, 600)); // respect the 600 char limit
+    const urlIdea = params.get("idea");
+    if (urlIdea) {
+      setIdea(urlIdea.slice(0, 600));
+      return;
     }
+    const fromState = getIdeaFromState(loadAdventure());
+    if (fromState) setIdea(fromState.slice(0, 600));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // only on mount
+  }, []);
 
   useEffect(() => {
     if (state.status === "done" && !stoppedRef.current) {

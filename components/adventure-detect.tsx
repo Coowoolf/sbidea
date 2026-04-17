@@ -2,34 +2,32 @@
 
 import { useEffect, useState } from "react";
 import { productUrl } from "@/lib/urls";
-
-const DISMISS_KEY = "sbidea-detect-dismissed";
-const ADVENTURE_KEY = "sbidea-adventure";
+import { isDetectDismissed, markDetectDismissed, loadAdventure } from "@/lib/adventure";
 
 /**
  * Floating prompt that nudges users to take the SBTI personality test.
  *
  * Shows a subtle bottom-right toast when:
- *   1. No adventure state in localStorage (user hasn't started adventure)
+ *   1. No adventure state (user hasn't started adventure)
  *   2. User hasn't dismissed this prompt before
  *   3. User isn't already on sbti.sbidea.ai (checks hostname)
  *
- * Dismissible — saves dismiss flag to localStorage.
+ * State stored in cookies with .sbidea.ai domain so it syncs across subdomains.
  */
 export function AdventureDetect() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Don't show on the SBTI page itself
     if (typeof window === "undefined") return;
+    // Don't show on the SBTI page itself
     if (window.location.hostname.startsWith("sbti.")) return;
     if (window.location.pathname.startsWith("/sbti")) return;
 
     // Already dismissed
-    if (localStorage.getItem(DISMISS_KEY)) return;
+    if (isDetectDismissed()) return;
 
     // Already has adventure state (took SBTI and started adventure)
-    if (localStorage.getItem(ADVENTURE_KEY)) return;
+    if (loadAdventure()) return;
 
     // Show after a short delay so it doesn't flash on page load
     const timer = setTimeout(() => setVisible(true), 2000);
@@ -38,7 +36,7 @@ export function AdventureDetect() {
 
   function handleDismiss() {
     setVisible(false);
-    localStorage.setItem(DISMISS_KEY, "1");
+    markDetectDismissed();
   }
 
   if (!visible) return null;

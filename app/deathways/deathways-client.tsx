@@ -5,6 +5,7 @@ import type { DeathOracle } from "../api/deathways/route";
 import { useAdventure } from "@/components/adventure-provider";
 import { AdventureBar } from "@/components/adventure-bar";
 import { AdventureCTA } from "@/components/adventure-cta";
+import { getIdeaFromState, loadAdventure } from "@/lib/adventure";
 
 type State =
   | { status: "idle" }
@@ -17,6 +18,20 @@ export function DeathwaysClient() {
   const [state, setState] = useState<State>({ status: "idle" });
   const { recordStop } = useAdventure();
   const stoppedRef = useRef(false);
+
+  // Pre-fill idea: URL param first, then fall back to adventure state (cookie)
+  useEffect(() => {
+    if (idea) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlIdea = params.get("idea");
+    if (urlIdea) {
+      setIdea(urlIdea.slice(0, 400));
+      return;
+    }
+    const fromState = getIdeaFromState(loadAdventure());
+    if (fromState) setIdea(fromState.slice(0, 400));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (state.status === "success" && !stoppedRef.current) {
@@ -177,7 +192,10 @@ export function DeathwaysClient() {
             </p>
           </article>
 
-          <AdventureCTA product="deathways" />
+          <AdventureCTA
+            product="deathways"
+            nextQuery={idea ? `idea=${encodeURIComponent(idea.slice(0, 400))}` : undefined}
+          />
         </>
       )}
     </div>

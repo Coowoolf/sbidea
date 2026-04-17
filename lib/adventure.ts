@@ -1,4 +1,4 @@
-// lib/adventure.ts — types, route map, localStorage helpers
+// lib/adventure.ts — types, route map, cross-subdomain cookie storage
 
 import { SB_MEANINGS } from "./sb-meanings";
 
@@ -23,15 +23,14 @@ export type AdventureState = {
   story?: { style: StoryStyle; content: string; generatedAt: string };
   startedAt: string;
   version: 1;
-
 };
 
-const STORAGE_KEY = "sbidea-adventure";
+const COOKIE_NAME = "sbidea-adventure";
+const STORY_LOCAL_KEY = "sbidea-adventure-story";
+const DISMISS_COOKIE = "sbidea-detect-dismissed";
+const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
 // 16 SBTI types → 5 recommended stations (from 10 tools)
-// Stations: generator, roast, deathways, headline, slogan, tarot, daily, jargon
-// (sbti excluded — it's the prerequisite, not a station)
-// (hall excluded — it's static content, not interactive)
 const ROUTE_MAP: Record<string, string[]> = {
   WFIM: ["generator", "roast", "deathways", "headline", "daily"],
   WFIA: ["generator", "tarot", "slogan", "roast", "daily"],
@@ -73,14 +72,65 @@ export const STATION_LABELS: Record<string, { emoji: string; name: string }> = {
   jargon: { emoji: "📖", name: "黑话词典" },
 };
 
-// --- localStorage helpers ---
+// --- cross-subdomain cookie helpers ---
+
+function isProdHost(): boolean {
+  if (typeof window === "undefined") return false;
+  const h = window.location.hostname;
+  return h === "sbidea.ai" || h.endsWith(".sbidea.ai");
+}
+
+function cookieDomainSuffix(): string {
+  // On prod: share across all *.sbidea.ai subdomains.
+  // On localhost: no domain → cookie scoped to origin.
+  return isProdHost() ? "; domain=.sbidea.ai" : "";
+}
+
+function setCookie(name: string, value: string, maxAgeSec = COOKIE_MAX_AGE): void {
+  if (typeof document === "undefined") return;
+  const encoded = encodeURIComponent(value);
+  document.cookie =
+    `${name}=${encoded}; path=/; max-age=${maxAgeSec}; SameSite=Lax` +
+    cookieDomainSuffix();
+}
+
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const prefix = `${name}=`;
+  for (const part of document.cookie.split("; ")) {
+    if (part.startsWith(prefix)) {
+      try {
+        return decodeURIComponent(part.slice(prefix.length));
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
+function deleteCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; path=/; max-age=0` + cookieDomainSuffix();
+}
+
+// --- adventure state storage ---
 
 export function loadAdventure(): AdventureState | null {
   if (typeof window === "undefined") return null;
+  const raw = getCookie(COOKIE_NAME);
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as AdventureState;
+    const core = JSON.parse(raw) as AdventureState;
+    // Story is kept in localStorage (too large for cookie budget).
+    // It only matters on the adventure subdomain where it was written.
+    try {
+      const story = localStorage.getItem(STORY_LOCAL_KEY);
+      if (story) core.story = JSON.parse(story);
+    } catch {
+      // ignore
+    }
+    return core;
   } catch {
     return null;
   }
@@ -88,13 +138,39 @@ export function loadAdventure(): AdventureState | null {
 
 export function saveAdventure(state: AdventureState): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Strip story from the cookie payload (4KB budget).
+  const { story, ...core } = state;
+  setCookie(COOKIE_NAME, JSON.stringify(core));
+  if (story) {
+    try {
+      localStorage.setItem(STORY_LOCAL_KEY, JSON.stringify(story));
+    } catch {
+      // ignore storage full
+    }
+  }
 }
 
 export function clearAdventure(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY);
+  deleteCookie(COOKIE_NAME);
+  try {
+    localStorage.removeItem(STORY_LOCAL_KEY);
+  } catch {
+    // ignore
+  }
 }
+
+// --- detect-prompt dismiss flag (also cross-subdomain) ---
+
+export function isDetectDismissed(): boolean {
+  return getCookie(DISMISS_COOKIE) === "1";
+}
+
+export function markDetectDismissed(): void {
+  setCookie(DISMISS_COOKIE, "1");
+}
+
+// --- lifecycle helpers ---
 
 export function startAdventure(
   sbtiCode: string,
@@ -132,7 +208,7 @@ export function recordStop(
     summary,
     data,
   };
-  // Advance step if this is the current station
+  // Advance step if this is at or after the current station
   const idx = state.route.indexOf(product);
   if (idx >= 0 && idx >= state.currentStep) {
     state.currentStep = Math.min(idx + 1, state.route.length);
@@ -149,4 +225,22 @@ export function nextStation(state: AdventureState): string | null {
     if (!(s in state.stops)) return s;
   }
   return null;
+}
+
+// --- pre-fill helpers (used by downstream stations) ---
+
+/**
+ * Returns the idea text generated in the generator stop, if any.
+ * Format: "Name — one-liner"
+ */
+export function getIdeaFromState(state: AdventureState | null): string | null {
+  if (!state) return null;
+  const gen = state.stops.generator;
+  if (!gen) return null;
+  const name = typeof gen.data.name === "string" ? gen.data.name : null;
+  const oneLiner =
+    typeof gen.data.oneLiner === "string" ? gen.data.oneLiner : null;
+  if (name && oneLiner) return `${name} — ${oneLiner}`;
+  if (name) return name;
+  return gen.summary || null;
 }
