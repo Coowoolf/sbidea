@@ -46,6 +46,14 @@ export function CallClient() {
     return () => clearInterval(t);
   }, [phase]);
 
+  // 5-minute hard session cap — mirrors timeout=300 on the agent side.
+  useEffect(() => {
+    if (phase !== "live") return;
+    if (elapsed < 300) return;
+    hangup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, elapsed]);
+
   useEffect(() => {
     if (!slug || !channel || !uidStr || !gf) return;
     const uid = Number(uidStr);
