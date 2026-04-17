@@ -23,11 +23,18 @@ export async function POST(req: Request) {
 
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
   const appCert = process.env.AGORA_APP_CERT;
-  if (!appId || !appCert) {
+  if (!appId) {
     return NextResponse.json(
-      { ok: false, error: "missing_env" },
+      { ok: false, error: "missing_app_id" },
       { status: 500 },
     );
+  }
+
+  // No-token (test) mode: project has no certificate, so both the TEN
+  // backend and this client just join with the App ID. Mirrors the Android
+  // demo's env.properties where agora.appCertificate is empty.
+  if (!appCert) {
+    return NextResponse.json({ ok: true, token: null, appId, expireTs: 0 });
   }
 
   const nowSec = Math.floor(Date.now() / 1000);

@@ -25,7 +25,7 @@ export type AgoraHandle = {
 export async function joinChannel(opts: {
   appId: string;
   channel: string;
-  token: string;
+  token: string | null;
   uid: number;
   onRemoteUserAudio: (user: IAgoraRTCRemoteUser) => void;
   onRemoteUserLeft: (user: IAgoraRTCRemoteUser) => void;
