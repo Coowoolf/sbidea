@@ -291,4 +291,4 @@ v1 文件结构允许 append-only 扩展:
 - 生产部署到 Vercel,gf.sbidea.ai DNS 加 CNAME
 - Vercel dashboard 加 gf.sbidea.ai 子域
 - 设置上面 §7 所有 env vars
-- 本地 dev:`.env.local` 里填同样的 key + `AGORA_TOKEN_BACKEND=http://111.127.53.87:8082`
+- 本地 dev:`.env.local` 里填同样的 key + `AGORA_TOKEN_BACKEND=<你的 TEN agent host>`
