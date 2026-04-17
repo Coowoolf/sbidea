@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { Route } from "next";
 import { getGf, type Gf } from "@/lib/gfs";
 import { parseTaggedLine, topEmotions, aggregateEmotionMix } from "@/lib/transcript";
+import { StreamMessageParser } from "@/lib/stream-message-parser";
 
-type Line = { who: "gf" | "me"; body: string; tags: string[]; ts: number };
+type Line = {
+  who: "gf" | "me";
+  turnId: number;
+  body: string;
+  tags: string[];
+  status: "in_progress" | "end" | "interrupted";
+  ts: number;
+};
 
 export function CallClient() {
   const router = useRouter();
@@ -24,6 +32,8 @@ export function CallClient() {
   const [elapsed, setElapsed] = useState(0);
   const [err, setErr] = useState<string | null>(null);
 
+  const handleRef = useRef<Awaited<ReturnType<typeof import("@/lib/agora-web")["joinChannel"]>> | null>(null);
+
   useEffect(() => {
     if (!slug || !channel || !uidStr) {
       router.replace("/gf" as Route);
@@ -35,6 +45,104 @@ export function CallClient() {
     const t = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(t);
   }, [phase]);
+
+  useEffect(() => {
+    if (!slug || !channel || !uidStr || !gf) return;
+    const uid = Number(uidStr);
+    const AGENT_UID = 2001;
+    const parser = new StreamMessageParser();
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const tr = await fetch("/api/gf/token", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ channel, uid }),
+        });
+        const td = await tr.json();
+        if (!td.ok) throw new Error(td.error ?? "token_fail");
+
+        const { joinChannel } = await import("@/lib/agora-web");
+        const handle = await joinChannel({
+          appId: td.appId,
+          channel,
+          token: td.token,
+          uid,
+          onRemoteUserAudio: (user) => {
+            if (!cancelled && Number(user.uid) === AGENT_UID) setPhase("live");
+          },
+          onRemoteUserLeft: () => {},
+          onStreamMessage: ({ data }) => {
+            const evt = parser.feed(data);
+            if (!evt || evt.kind !== "transcription") return;
+            const who: "gf" | "me" = evt.role === "assistant" ? "gf" : "me";
+            if (!evt.text) return;
+            const { tags, body } = parseTaggedLine(evt.text);
+
+            setLines((prev) => {
+              const i = prev.findIndex(
+                (l) => l.turnId === evt.turnId && l.who === who,
+              );
+              const next: Line = {
+                who,
+                turnId: evt.turnId,
+                body,
+                tags,
+                status: evt.status,
+                ts: Date.now(),
+              };
+              if (i >= 0) {
+                const copy = prev.slice();
+                copy[i] = next;
+                return copy;
+              }
+              return [...prev, next];
+            });
+
+            if (who === "gf" && tags.length > 0) {
+              setAllTags((prev) => [...prev, ...tags]);
+            }
+          },
+        });
+        handleRef.current = handle;
+
+        // Kick off agent AFTER we're in the channel so we don't miss the greeting.
+        const sr = await fetch("/api/gf/start", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ channel, uid, gfSlug: slug }),
+        });
+        const sd = await sr.json();
+        if (!sd.ok) throw new Error(sd.error ?? "start_fail");
+      } catch (e) {
+        if (!cancelled) {
+          setErr(`连不上:${String((e as Error)?.message ?? e).slice(0, 80)}`);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      const h = handleRef.current;
+      handleRef.current = null;
+      (async () => {
+        try {
+          await fetch("/api/gf/stop", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ channel }),
+          });
+        } catch {}
+        await h?.leave();
+      })();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, channel, uidStr]);
+
+  useEffect(() => {
+    void handleRef.current?.toggleMic(muted);
+  }, [muted]);
 
   const pills = topEmotions(allTags, 3);
 
@@ -161,14 +269,6 @@ export function CallClient() {
         0%, 100% { box-shadow: 0 0 0 6px rgba(240,181,107,.12), 0 0 0 18px rgba(240,181,107,.06); }
         50% { box-shadow: 0 0 0 10px rgba(240,181,107,.22), 0 0 0 26px rgba(240,181,107,.1); }
       }`}</style>
-
-      {/* --- hooks placeholder — network wiring added in Task 13 --- */}
-      <Unused onSet={{ setPhase, setLines, setAllTags, setErr, parseTaggedLine, muted }} />
     </div>
   );
-}
-
-// Silence "unused" lints for stubs that will be consumed in Task 13.
-function Unused(_: { onSet: unknown }) {
-  return null;
 }
