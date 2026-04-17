@@ -59,7 +59,13 @@ export default async function RootLayout({
 }) {
   const h = await headers();
   const host = h.get("host") ?? "";
-  const path = h.get("x-invoke-path") ?? h.get("x-matched-path") ?? "";
+  // proxy.ts sets `x-pathname` on every passthrough/rewrite. Fall back to
+  // the legacy Next.js headers in case the proxy matcher missed the request.
+  const path =
+    h.get("x-pathname") ??
+    h.get("x-invoke-path") ??
+    h.get("x-matched-path") ??
+    "";
   const isGf = host.startsWith("gf.") || path.startsWith("/gf");
 
   return (

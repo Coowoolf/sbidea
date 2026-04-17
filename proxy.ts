@@ -11,6 +11,11 @@
  * API routes (/api/*), static assets (/_next/*), and the bare domain
  * (sbidea.ai) are NOT rewritten.
  *
+ * Also injects `x-pathname` on all passthrough responses so server
+ * components (notably app/layout.tsx) can branch on the incoming URL
+ * path. Next.js 16 no longer exposes x-invoke-path/x-matched-path by
+ * default, so we thread it here ourselves.
+ *
  * DNS: *.sbidea.ai CNAME → cname.vercel-dns.com (Cloudflare)
  * Vercel: add *.sbidea.ai as a wildcard domain in project settings
  */
@@ -33,43 +38,51 @@ const SUBDOMAIN_MAP: Record<string, string> = {
   gf: "/gf",
 };
 
+function passthrough(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
 
-  // Skip localhost / dev (no subdomains)
+  // Skip localhost / dev (no subdomains) — still inject x-pathname.
   if (host.startsWith("localhost") || host.startsWith("127.0.0.1")) {
-    return NextResponse.next();
+    return passthrough(request);
   }
 
   // Extract subdomain: "generator.sbidea.ai" → "generator"
   const parts = host.split(".");
-  if (parts.length < 3) return NextResponse.next(); // bare domain
+  if (parts.length < 3) return passthrough(request); // bare domain
   const subdomain = parts[0];
 
   // Skip www
-  if (subdomain === "www") return NextResponse.next();
+  if (subdomain === "www") return passthrough(request);
 
   const targetPath = SUBDOMAIN_MAP[subdomain];
-  if (!targetPath) return NextResponse.next(); // unknown subdomain → pass through
+  if (!targetPath) return passthrough(request); // unknown subdomain
 
   const { pathname } = request.nextUrl;
 
   // Don't rewrite API routes or static assets
   if (pathname.startsWith("/api/") || pathname.startsWith("/_next/")) {
-    return NextResponse.next();
+    return passthrough(request);
   }
 
   // Rewrite root "/" to the product page
   if (pathname === "/" || pathname === "") {
     const url = request.nextUrl.clone();
     url.pathname = targetPath;
-    return NextResponse.rewrite(url);
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-pathname", targetPath);
+    return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
   }
 
   // For any other path on a subdomain (e.g., sbti.sbidea.ai/generator),
   // let it pass through — Next.js will render the page normally since
   // all product paths exist in the app directory.
-  return NextResponse.next();
+  return passthrough(request);
 }
 
 export const config = {
