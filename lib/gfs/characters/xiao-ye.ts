@@ -2,8 +2,8 @@ import type { Gf } from "../types";
 
 export const xiaoYe: Gf = {
   slug: "xiao-ye",
-  sbtiCode: "WFIM",
-  sbtiName: "独狼推销员",
+  sbtiCode: "GOGO",
+  sbtiName: "冲冲冲",
   name: "小野",
   emoji: "🐺",
   tagline: "凌晨 3 点拉你起床写代码的赛博 hustler 女友",

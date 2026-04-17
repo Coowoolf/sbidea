@@ -1,257 +1,63 @@
-import type { Metadata } from "next";
-import { unicorns } from "@/lib/unicorns";
-import { productUrl } from "@/lib/urls";
-import { SB_MARQUEE_ITEMS } from "@/lib/sb-meanings";
-import { SbRotatingText } from "@/components/sb-rotating-text";
+import Link from "next/link";
+import type { Route } from "next";
 
-export const metadata: Metadata = {
-  title: "SB Idea · 看起来 SB，赚起来真",
-  description:
-    "10 个小工具：SB 想法生成器、鉴定所、独角兽名人堂、SBTI 人格测试、融资头条、死法占卜、Slogan 对撞机、创业塔罗、成功学日签、黑话词典。让 AI 帮你做最傻也最封神的创业决定。",
-  alternates: { canonical: "/" },
+export const metadata = {
+  title: "SBTI · 傻逼型人格测试 · 看你和谁最般配",
+  description: "15 维 27 型 · 30 题 4 分钟 · 测出你的 SBTI,立刻和最合得来的那个赛博对象讲上话。",
+  openGraph: {
+    type: "website",
+    url: "https://sbidea.ai",
+    title: "SBTI · 看你和谁最般配",
+    description: "15 维 27 型 · 30 题 4 分钟 · 测完直接和最合得来的赛博对象通话。",
+    siteName: "sbidea.ai",
+  },
 };
-
-type Product = {
-  slug: string;
-  emoji: string;
-  title: string;
-  tagline: string;
-  tag: "生成" | "鉴定" | "策展" | "测试" | "娱乐" | "工具";
-};
-
-const products: Product[] = [
-  {
-    slug: "generator",
-    emoji: "🎲",
-    title: "SB 想法生成器",
-    tagline: "一键吐出一个『听起来很傻、细想真行』的创业点子",
-    tag: "生成",
-  },
-  {
-    slug: "roast",
-    emoji: "🔥",
-    title: "SB 想法鉴定所",
-    tagline: "把点子扔进来，AI 先毒舌一通再给你真心话",
-    tag: "鉴定",
-  },
-  {
-    slug: "hall",
-    emoji: "🦄",
-    title: "SB 独角兽名人堂",
-    tagline: "那些发布时被骂 SB、现在估值百亿的真实案例",
-    tag: "策展",
-  },
-  {
-    slug: "sbti",
-    emoji: "🧠",
-    title: "SBTI · 创业 16 型",
-    tagline: "12 道题测出你是哪一种 SB 创始人",
-    tag: "测试",
-  },
-  {
-    slug: "headline",
-    emoji: "📰",
-    title: "SB 融资头条",
-    tagline: "把你的点子写成一篇煞有介事的融资新闻",
-    tag: "娱乐",
-  },
-  {
-    slug: "deathways",
-    emoji: "💀",
-    title: "SB 死法占卜",
-    tagline: "预言你的点子会以哪 7 种戏剧化方式死掉",
-    tag: "鉴定",
-  },
-  {
-    slug: "slogan",
-    emoji: "🎨",
-    title: "SB Slogan 对撞机",
-    tagline: "同一个产品的 8 种风格 slogan 并排比拼",
-    tag: "工具",
-  },
-  {
-    slug: "tarot",
-    emoji: "🔮",
-    title: "SB 创业塔罗",
-    tagline: "22 张大阿卡那，抽 3 张解读你的创业命运",
-    tag: "测试",
-  },
-  {
-    slug: "daily",
-    emoji: "🏆",
-    title: "SB 成功学日签",
-    tagline: "每天一句反成功学口号，自动配色海报",
-    tag: "娱乐",
-  },
-  {
-    slug: "jargon",
-    emoji: "📖",
-    title: "SB 黑话词典",
-    tagline: "人话 ↔ 投资人黑话双向翻译",
-    tag: "工具",
-  },
-];
-
-const hallPreview = unicorns.slice(0, 4);
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-6xl px-5">
-      <section className="pt-16 pb-12 md:pt-24 md:pb-16">
-        <div className="flex flex-col items-start gap-6">
-          <div className="sb-stamp wobble text-base md:text-lg">
-            sbidea.ai · 傻想法研究所
-          </div>
-          <h1 className="max-w-3xl text-4xl font-black leading-[1.05] tracking-tight md:text-6xl">
-            看起来 <span className="sb-stamp">SB</span> 的点子，
-            <br />
-            往往是最赚钱的那一个。
-          </h1>
-          <p className="max-w-2xl text-lg text-[color:var(--color-muted)] md:text-xl">
-            创业者的灵感实验室。10 个 AI 小工具帮你生成、吐槽、鉴定、占卜那些
-            听起来 SB 但可能封神的创业点子。
-          </p>
-          <SbRotatingText />
-          <div className="mt-2 flex flex-wrap gap-3">
-            <a href={productUrl("generator")} className="sb-btn">
-              🎲 给我一个 SB 点子
-            </a>
-            <a href={productUrl("sbti")} className="sb-btn sb-btn-ghost">
-              🧠 测我是哪一型
-            </a>
-            <a href={productUrl("tarot")} className="sb-btn sb-btn-ghost">
-              🔮 抽张塔罗
-            </a>
-          </div>
+    <div
+      className="min-h-screen"
+      style={{
+        background: "radial-gradient(circle at 70% 18%, rgba(255,180,80,.18), transparent 55%), #0a0a0a",
+        color: "#fff",
+      }}
+    >
+      <div className="mx-auto max-w-xl px-5 py-14">
+        <div className="text-[11px] font-black" style={{ letterSpacing: "0.35em", opacity: 0.55 }}>
+          SBIDEA · SBTI
         </div>
-      </section>
+        <h1 className="mt-4 text-[40px] font-black leading-[1.1] md:text-[52px]">
+          看你是哪一号
+          <br />
+          <span style={{ color: "#f0b56b" }}>傻逼型人格</span>
+        </h1>
+        <p className="mt-6 text-[16px] leading-relaxed" style={{ opacity: 0.85 }}>
+          30 题,4 分钟。15 维度 × 27 种人格,找出你最合得来的那几位赛博对象 —— 测完直接和 TA 讲上话。
+        </p>
 
-      {/* SB Meanings Marquee — dual row, opposite directions */}
-      <section className="mt-8 -mx-5 overflow-hidden border-y-2 border-[color:var(--color-ink)] bg-[color:var(--color-ink)] py-4">
-        <div className="marquee-track">
-          {[...SB_MARQUEE_ITEMS, ...SB_MARQUEE_ITEMS].map((item, i) => (
-            <span
-              key={`a${i}`}
-              className="mx-8 whitespace-nowrap text-base font-bold text-[color:var(--color-paper)] md:text-lg"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-        <div className="marquee-track-reverse mt-3">
-          {[...SB_MARQUEE_ITEMS, ...SB_MARQUEE_ITEMS].reverse().map((item, i) => (
-            <span
-              key={`b${i}`}
-              className="mx-8 whitespace-nowrap text-base font-bold text-[color:var(--color-paper)] opacity-70 md:text-lg"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      </section>
+        <Link
+          href={("/sbti" as Route)}
+          className="mt-10 inline-block rounded-xl px-6 py-3 text-base font-black"
+          style={{ background: "#f0b56b", color: "#0a0a0a" }}
+        >
+          🧠 开始测试
+        </Link>
 
-      <section className="mt-12">
-        <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-2xl font-black md:text-3xl">10 个小工具</h2>
-          <div className="text-sm text-[color:var(--color-muted)]">
-            点开随便玩，无需注册
-          </div>
+        <div className="mt-3 text-[11px]" style={{ opacity: 0.45 }}>
+          参考 sbti-wiki · 匿名 · 不会存你的答题
         </div>
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((p, i) => (
-            <a
-              key={p.slug}
-              href={productUrl(p.slug)}
-              className="sb-card slide-up block p-6 transition-transform hover:-translate-y-1"
-              style={{ animationDelay: `${i * 30}ms` }}
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <div className="text-4xl">{p.emoji}</div>
-                <span className="rounded-full border-2 border-[color:var(--color-ink)] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide">
-                  {p.tag}
-                </span>
-              </div>
-              <h3 className="mb-1 text-xl font-black">{p.title}</h3>
-              <p className="text-sm text-[color:var(--color-muted)]">
-                {p.tagline}
-              </p>
-              <div className="mt-5 text-sm font-bold underline">
-                去玩一下 →
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
 
-      <section className="mt-24 sb-card p-8 md:p-12">
-        <h2 className="text-2xl font-black md:text-3xl">
-          为什么 SB 的点子反而能赢？
-        </h2>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-          <div>
-            <p className="text-[color:var(--color-muted)]">
-              Paul Graham 在 2012 年写过：
-              <em>
-                &ldquo;The best startup ideas seem at first like bad
-                ideas.&rdquo;
-              </em>
-            </p>
-            <p className="mt-3 text-[color:var(--color-muted)]">
-              Airbnb 发布时被骂『让陌生人睡你家客厅的气垫床』，Twitter
-              被嘲『就是一行字有什么用』，拼多多被定性为『消费降级』。
-              历史上最大的生意，往往是从一个『听起来 SB 的想法』长出来的。
-            </p>
-          </div>
-          <div>
-            <p className="font-bold">sbidea.ai 的小宇宙</p>
-            <ul className="mt-3 space-y-2 text-[color:var(--color-muted)]">
-              <li>
-                <strong>生成侧：</strong>想法生成器 · 融资头条 · Slogan 对撞机
-              </li>
-              <li>
-                <strong>鉴定侧：</strong>鉴定所 · 死法占卜 · 创业塔罗
-              </li>
-              <li>
-                <strong>认识你自己：</strong>SBTI 人格 · 成功学日签 · 黑话词典
-              </li>
-              <li>
-                <strong>确认你不孤单：</strong>独角兽名人堂
-              </li>
-            </ul>
-          </div>
+        <div className="mt-14 grid gap-3 text-[13px]" style={{ opacity: 0.85 }}>
+          <div>✦ 自尊 · 情感 · 态度 · 行动 · 社交 五大模型</div>
+          <div>✦ 用曼哈顿距离在 25 种人格模板里找最接近的一型</div>
+          <div>✦ 匹配 "类似灵魂" × 2 + "互补撒" × 1</div>
+          <div>✦ 每个人格未来都有一个赛博对象可以打电话(MVP:🐺 小野 = GOGO)</div>
         </div>
-      </section>
 
-      <section className="mt-24">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="text-2xl font-black md:text-3xl">
-            名人堂精选 · 当年都被骂 SB
-          </h2>
-          <a href={productUrl("hall")} className="text-sm font-bold underline">
-            查看全部 →
-          </a>
+        <div className="mt-20 text-center text-[11px]" style={{ opacity: 0.35 }}>
+          之前的 10 个小工具 · <a href="https://legacy.sbidea.ai" style={{ color: "rgba(255,255,255,.55)", textDecoration: "underline" }}>legacy.sbidea.ai</a>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {hallPreview.map((u) => (
-            <a
-              key={u.slug}
-              href={`${productUrl("hall")}/${u.slug}`}
-              className="sb-card block p-5 transition-transform hover:-translate-y-1"
-            >
-              <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[color:var(--color-muted)]">
-                {u.yearFounded} · {u.category}
-              </div>
-              <div className="text-lg font-black">{u.name}</div>
-              <p className="mt-2 text-sm italic text-[color:var(--color-muted)]">
-                &ldquo;{u.sbQuote}&rdquo;
-              </p>
-              <div className="mt-3 text-sm font-bold">{u.nowValuation}</div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <div className="h-20" />
+      </div>
     </div>
   );
 }
