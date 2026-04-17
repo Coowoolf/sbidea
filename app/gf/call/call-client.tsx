@@ -56,7 +56,10 @@ export function CallClient() {
 
   useEffect(() => {
     if (!slug || !channel || !uidStr || !gf) return;
-    const uid = Number(uidStr);
+    // Generate a fresh uid per mount so React's strict-mode double-mount
+    // in dev doesn't trigger UID_CONFLICT when the first mount's leave()
+    // hasn't finished before the second mount's join().
+    const uid = Math.floor(Math.random() * 900_000_000) + 1000;
     const AGENT_UID = 2001;
     const parser = new StreamMessageParser();
     let cancelled = false;
