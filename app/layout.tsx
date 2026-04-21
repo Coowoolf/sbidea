@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AdventureProvider } from "@/components/adventure-provider";
 import { AdventureDetect } from "@/components/adventure-detect";
 import "./globals.css";
@@ -82,6 +84,8 @@ export default async function RootLayout({
             <AdventureDetect />
           </AdventureProvider>
         )}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
