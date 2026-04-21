@@ -226,18 +226,25 @@ function buildChartData(
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
+// Dark theme palette matching sbidea.ai's main aesthetic (dark bg + orange accent).
+// S2S kept coral-family, Pipeline kept teal-family — brightened so they're
+// legible on the dark background. Brand accent is #f0b56b (same as sbidea home,
+// /gf, /sbti etc.).
 const C = {
-  s2s: "#D85A30",
-  s2sFill: "#FAECE7",
-  s2sText: "#4A1B0C",
-  s2sTextAlt: "#712B13",
-  pipeline: "#1D9E75",
-  pipelineFill: "#E1F5EE",
-  pipelineText: "#04342C",
-  pipelineTextAlt: "#085041",
-  ink: "#0A1A2E",
-  surface: "#F7F8FA",
-  muted: "#546681",
+  s2s: "#ff8a5c",
+  s2sFill: "rgba(255,138,92,0.12)",
+  s2sText: "#ffcfb5",
+  s2sTextAlt: "#ffe1cd",
+  pipeline: "#34d399",
+  pipelineFill: "rgba(52,211,153,0.1)",
+  pipelineText: "#bbf7d0",
+  pipelineTextAlt: "#dcfce7",
+  ink: "#ffffff",
+  surface: "rgba(255,255,255,0.05)",
+  surfaceBorder: "rgba(255,255,255,0.08)",
+  muted: "rgba(255,255,255,0.6)",
+  accent: "#f0b56b",
+  grid: "rgba(255,255,255,0.06)",
 } as const;
 
 const FONT_STACK =
@@ -302,7 +309,7 @@ export default function CalculatorClient() {
         borderWidth: 2,
         pointRadius: 0,
         fill: true,
-        backgroundColor: "rgba(216,90,48,0.06)",
+        backgroundColor: "rgba(255,138,92,0.08)",
         tension: 0.3,
       },
       {
@@ -318,8 +325,8 @@ export default function CalculatorClient() {
       {
         label: "Your session",
         data: yourPointData,
-        borderColor: C.ink,
-        backgroundColor: C.ink,
+        borderColor: C.accent,
+        backgroundColor: C.accent,
         pointRadius: 6,
         pointHoverRadius: 7,
         showLine: false,
@@ -368,7 +375,7 @@ export default function CalculatorClient() {
           color: C.muted,
           font: { size: 11, family: FONT_STACK },
         },
-        grid: { color: "rgba(115,114,108,0.08)" },
+        grid: { color: C.grid },
       },
       y: {
         min: 0,
@@ -384,7 +391,7 @@ export default function CalculatorClient() {
           color: C.muted,
           font: { size: 11, family: FONT_STACK },
         },
-        grid: { color: "rgba(115,114,108,0.08)" },
+        grid: { color: C.grid },
       },
     },
   };
@@ -441,21 +448,24 @@ export default function CalculatorClient() {
               key={key}
               onClick={() => applyPreset(preset.duration, preset.volume)}
               style={{
-                border: "0.5px solid rgba(10,26,46,0.12)",
+                border: `1px solid ${C.surfaceBorder}`,
                 borderRadius: 8,
-                background: "white",
+                background: "rgba(255,255,255,0.03)",
                 padding: "10px 12px",
                 textAlign: "left" as const,
                 cursor: "pointer",
-                transition: "background 0.1s",
+                color: C.ink,
+                transition: "background 0.1s, border-color 0.1s",
                 fontFamily: FONT_STACK,
               }}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLButtonElement).style.background = C.surface)
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLButtonElement).style.background = "white")
-              }
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(240,181,107,0.4)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = C.surfaceBorder;
+              }}
               onMouseDown={(e) =>
                 ((e.currentTarget as HTMLButtonElement).style.transform =
                   "scale(0.98)")
@@ -484,6 +494,7 @@ export default function CalculatorClient() {
       <div
         style={{
           background: C.surface,
+          border: `1px solid ${C.surfaceBorder}`,
           borderRadius: 12,
           padding: "20px 24px",
           marginBottom: 24,
@@ -591,11 +602,11 @@ export default function CalculatorClient() {
             style={{
               width: "100%",
               padding: "8px 10px",
-              border: "0.5px solid rgba(10,26,46,0.2)",
+              border: `1px solid rgba(255,255,255,0.15)`,
               borderRadius: 6,
               fontSize: 14,
               color: C.ink,
-              background: "white",
+              background: "#1a1a1a",
               fontFamily: FONT_STACK,
               cursor: "pointer",
             }}
@@ -630,11 +641,11 @@ export default function CalculatorClient() {
             style={{
               width: "100%",
               padding: "8px 10px",
-              border: "0.5px solid rgba(10,26,46,0.2)",
+              border: `1px solid rgba(255,255,255,0.15)`,
               borderRadius: 6,
               fontSize: 14,
               color: C.ink,
-              background: "white",
+              background: "#1a1a1a",
               fontFamily: FONT_STACK,
               cursor: "pointer",
             }}
@@ -664,6 +675,7 @@ export default function CalculatorClient() {
         <div
           style={{
             background: C.s2sFill,
+            border: `1px solid rgba(255,138,92,0.2)`,
             borderRadius: 12,
             padding: "16px 20px",
           }}
@@ -699,6 +711,7 @@ export default function CalculatorClient() {
         <div
           style={{
             background: C.pipelineFill,
+            border: `1px solid rgba(52,211,153,0.2)`,
             borderRadius: 12,
             padding: "16px 20px",
           }}
@@ -736,7 +749,7 @@ export default function CalculatorClient() {
             background: C.surface,
             borderRadius: 12,
             padding: "16px 20px",
-            border: "0.5px solid rgba(10,26,46,0.08)",
+            border: `1px solid ${C.surfaceBorder}`,
           }}
         >
           <div
@@ -812,7 +825,7 @@ export default function CalculatorClient() {
               width: 10,
               height: 10,
               borderRadius: "50%",
-              background: C.ink,
+              background: C.accent,
             }}
           />
           <span style={{ fontSize: 12, color: C.muted }}>
@@ -826,10 +839,10 @@ export default function CalculatorClient() {
         style={{
           height: 260,
           marginBottom: 24,
-          background: "white",
+          background: "rgba(255,255,255,0.03)",
           borderRadius: 8,
           padding: "12px 12px 4px",
-          border: "0.5px solid rgba(10,26,46,0.06)",
+          border: `1px solid ${C.surfaceBorder}`,
         }}
       >
         <Line data={chartData} options={chartOptions} />
@@ -839,6 +852,7 @@ export default function CalculatorClient() {
       <div
         style={{
           background: C.surface,
+          border: `1px solid ${C.surfaceBorder}`,
           borderRadius: 8,
           padding: 12,
           marginBottom: 24,

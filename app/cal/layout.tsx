@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F7F8FA",
+  themeColor: "#0a0a0a",
   width: "device-width",
   initialScale: 1,
 };
@@ -33,7 +33,9 @@ export default function CalLayout({
     <div
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F7F8FA",
+        background:
+          "radial-gradient(circle at 70% 18%, rgba(255,180,80,.14), transparent 55%), #0a0a0a",
+        color: "#fff",
         fontFamily:
           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
