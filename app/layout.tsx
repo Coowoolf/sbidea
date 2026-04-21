@@ -65,12 +65,16 @@ export default async function RootLayout({
     h.get("x-invoke-path") ??
     h.get("x-matched-path") ??
     "";
-  const isGf = host.startsWith("gf.") || path.startsWith("/gf");
+  const isBare =
+    host.startsWith("gf.") ||
+    host.startsWith("cal.") ||
+    path.startsWith("/gf") ||
+    path.startsWith("/cal");
 
   return (
     <html lang="zh-CN">
       <body className="min-h-screen grain">
-        {isGf ? (
+        {isBare ? (
           <main>{children}</main>
         ) : (
           <AdventureProvider>

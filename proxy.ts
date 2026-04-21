@@ -36,6 +36,7 @@ const SUBDOMAIN_MAP: Record<string, string> = {
   jargon: "/jargon",
   adventure: "/adventure",
   gf: "/gf",
+  cal: "/cal",
 };
 
 function passthrough(request: NextRequest) {
